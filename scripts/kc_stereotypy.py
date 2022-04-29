@@ -234,7 +234,7 @@ p_B = np.count_nonzero(B_sub_adj) / B_sub_adj.size
 n = A_sub_adj.shape[1]
 
 rng = np.random.default_rng(8888)
-n_sims = 500
+n_sims = 1000
 
 for sim in tqdm(range(n_sims)):
     A_sim = er_subgraph(A_sub_adj.shape, p_A, rng)
