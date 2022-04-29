@@ -1,4 +1,9 @@
+#%% [markdown]
+# # Left/Right stereotypy in Kenyon cells
+
 #%%
+
+import datetime
 import time
 
 import matplotlib.pyplot as plt
@@ -229,7 +234,7 @@ p_B = np.count_nonzero(B_sub_adj) / B_sub_adj.size
 n = A_sub_adj.shape[1]
 
 rng = np.random.default_rng(8888)
-n_sims = 1000
+n_sims = 500
 
 for sim in tqdm(range(n_sims)):
     A_sim = er_subgraph(A_sub_adj.shape, p_A, rng)
@@ -259,3 +264,9 @@ ax.set(ylabel="", yticks=[], xlabel="Alignment strength")
 ax.spines["left"].set_visible(False)
 
 gluefig("alignment_dist", fig)
+
+#%%
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")

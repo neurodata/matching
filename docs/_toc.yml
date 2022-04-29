@@ -4,6 +4,9 @@ parts:
   - caption: Preliminaries
     chapters:
     - file: introduction
+  - caption: Results 
+    chapters: 
+    - file: kc_stereotypy
   - caption: References
     chapters: 
     - file: references
