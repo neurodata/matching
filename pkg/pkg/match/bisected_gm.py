@@ -7,9 +7,10 @@ from scipy.optimize import linear_sum_assignment
 class BisectedGraphMatchSolver(BaseMatchSolver):
     def __init__(
         self,
-        adjacency,
-        indices1,
-        indices2,
+        A,
+        B,
+        AB=None,
+        BA=None,
         similarity=None,
         partial_match=None,
         rng=None,
@@ -40,25 +41,28 @@ class BisectedGraphMatchSolver(BaseMatchSolver):
         # S = np.atleast_2d(S)
 
         # TODO padding
-        A = adjacency[np.ix_(indices1, indices1)]
-        B = adjacency[np.ix_(indices2, indices2)]
-        AB = adjacency[np.ix_(indices1, indices2)]
-        BA = adjacency[np.ix_(indices2, indices1)]
 
         if init == "barycenter":
             init = 1.0
 
-        self.A = A.copy()
-        self.B = B.copy()
-        self.AB = AB.copy()
-        self.BA = BA.copy()
+        self.A = _check_input_matrix(A)
+        self.B = _check_input_matrix(B)
+        self.AB = _check_input_matrix(AB)
+        self.BA = _check_input_matrix(BA)
 
         # self.S = S
         # self.partial_match = partial_match
 
         # self.n = .shape[0]  # number of vertices in graphs
         # self.n_seeds = partial_match.shape[0]  # number of seeds
-        self.n_unseed = A.shape[0]
+        self.n_unseed = A[0].shape[0]  # TODO
+        # self.n_nodes = A.shape[0]
+        self.n_B = B[0].shape[0]
+
+    def permute(self, permutation):
+        self.B = _permute_multilayer(self.B, permutation, rows=True, columns=True)
+        self.AB = _permute_multilayer(self.AB, permutation, rows=False, columns=True)
+        self.BA = _permute_multilayer(self.BA, permutation, rows=True, columns=False)
 
     # TODO
     def check_outlier_cases(self):
@@ -69,13 +73,12 @@ class BisectedGraphMatchSolver(BaseMatchSolver):
     # TODO
     def set_reference_frame(self):
         if self.shuffle_input:
-            perm = self.rng.permutation(self.n_unseed)
+            perm = self.rng.permutation(self.n_B)
 
             self._reverse_permutation = np.argsort(perm)
 
-            self.B = self.B[perm][:, perm]
-            self.AB = self.AB[:, perm]  # permute columns only
-            self.BA = self.BA[perm]  # permute rows only
+            self.permute(perm)
+
             # TODO permute seeds and anything else that could be added
         else:
             self._reverse_permutation = np.arange(self.n_unseed)
@@ -116,9 +119,38 @@ class BisectedGraphMatchSolver(BaseMatchSolver):
         return 0
 
 
+def _permute_multilayer(adjacency, permutation, rows=True, columns=True):
+    for layer_index in range(len(adjacency)):
+        layer = adjacency[layer_index]
+        if rows:
+            layer = layer[permutation]
+        if columns:
+            layer = layer[:, permutation]
+        adjacency[layer_index] = layer
+    return adjacency
+
+
+def _check_input_matrix(A):
+    if isinstance(A, np.ndarray) and (np.ndim(A) == 2):
+        A = np.expand_dims(A, axis=0)
+    if isinstance(A, list):
+        A = np.array(A)
+    return A
+
+
 @jit(nopython=True)
 def _compute_gradient(P, A, B, AB, BA):
-    return A @ P @ B.T + A.T @ P @ B + AB @ P.T @ BA.T + BA.T @ P.T @ AB
+    n_layers = A.shape[0]
+    grad = np.zeros_like(P)
+    for i in range(n_layers):
+        grad = (
+            grad
+            + A[i] @ P @ B[i].T
+            + A[i].T @ P @ B[i]
+            + AB[i] @ P.T @ BA[i].T
+            + BA[i].T @ P.T @ AB[i]
+        )
+    return grad
 
 
 @jit(nopython=True)
@@ -126,10 +158,17 @@ def _compute_coefficients(P, Q, A, B, AB, BA):
     R = P - Q
     # TODO make these "smart" traces like in the scipy code, couldn't hurt
     # though I don't know how much Numba cares
-    a_cross = np.trace(AB.T @ R @ BA @ R)
-    b_cross = np.trace(AB.T @ R @ BA @ Q) + np.trace(AB.T @ Q @ BA @ R)
-    a_intra = np.trace(A @ R @ B.T @ R.T)
-    b_intra = np.trace(A @ Q @ B.T @ R.T + A @ R @ B.T @ Q.T)
+
+    n_layers = A.shape[0]
+    a_cross = 0
+    b_cross = 0
+    a_intra = 0
+    b_intra = 0
+    for i in range(n_layers):
+        a_cross += np.trace(AB[i].T @ R @ BA[i] @ R)
+        b_cross += np.trace(AB[i].T @ R @ BA[i] @ Q) + np.trace(AB[i].T @ Q @ BA[i] @ R)
+        a_intra += np.trace(A[i] @ R @ B[i].T @ R.T)
+        b_intra += np.trace(A[i] @ Q @ B[i].T @ R.T + A[i] @ R @ B[i].T @ Q.T)
 
     a = a_cross + a_intra
     b = b_cross + b_intra
