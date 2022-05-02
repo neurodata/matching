@@ -41,3 +41,10 @@ for i in range(n_trials):
     match_ratio = (bgm.permutation_ == np.arange(n)).mean()
     mean_match_ratio += match_ratio / n_trials
 mean_match_ratio
+
+#%%
+from pkg.match import GraphMatchSolver
+
+gm = GraphMatchSolver(
+    A_LL, A_RR, A_LR, A_RL, partial_match=np.array([[0, 0], [1, 1], [3, 3]])
+)

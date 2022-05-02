@@ -45,6 +45,9 @@ class BisectedGraphMatchSolver(BaseMatchSolver):
         if init == "barycenter":
             init = 1.0
 
+        n = len(B[0])
+        nonseed_B = np.setdiff1d(range(n), partial_match[:, 1])
+
         self.A = _check_input_matrix(A)
         self.B = _check_input_matrix(B)
         self.AB = _check_input_matrix(AB)
@@ -133,23 +136,25 @@ def _permute_multilayer(adjacency, permutation, rows=True, columns=True):
 def _check_input_matrix(A):
     if isinstance(A, np.ndarray) and (np.ndim(A) == 2):
         A = np.expand_dims(A, axis=0)
+        A = A.astype(float)
     if isinstance(A, list):
-        A = np.array(A)
+        A = np.array(A, dtype=float)
     return A
 
 
 @jit(nopython=True)
-def _compute_gradient(P, A, B, AB, BA):
+def _compute_gradient(P, A, B, AB, BA, const_sum):
     n_layers = A.shape[0]
     grad = np.zeros_like(P)
     for i in range(n_layers):
-        grad = (
-            grad
-            + A[i] @ P @ B[i].T
+        grad += (
+            A[i] @ P @ B[i].T
             + A[i].T @ P @ B[i]
             + AB[i] @ P.T @ BA[i].T
             + BA[i].T @ P.T @ AB[i]
+            + const_sum[i]
         )
+
     return grad
 
 
