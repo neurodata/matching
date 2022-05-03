@@ -7,7 +7,7 @@ parts:
   - caption: Testing
     chapters: 
     - file: benchmarks
-  - caption: Examples/Results 
+  - caption: Results 
     chapters:
     - file: kc_stereotypy
   - caption: References
