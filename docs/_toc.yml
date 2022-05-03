@@ -4,8 +4,11 @@ parts:
   - caption: Preliminaries
     chapters:
     - file: introduction
-  - caption: Results 
+  - caption: Testing
     chapters: 
+    - file: benchmarks
+  - caption: Examples/Results 
+    chapters:
     - file: kc_stereotypy
   - caption: References
     chapters: 
