@@ -1,5 +1,6 @@
 import time
 from functools import wraps
+from nbformat import write
 
 import numpy as np
 from numba import jit
@@ -7,6 +8,40 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
 from graspologic.types import Dict, Tuple
+
+
+def parametrized(dec):
+    def layer(*args, **kwargs):
+        def repl(f):
+            return dec(f, *args, **kwargs)
+
+        return repl
+
+    return layer
+
+
+@parametrized
+def write_status(f, msg, level):
+    @wraps(f)
+    def wrap(*args, **kw):
+        obj = args[0]
+        verbose = obj.verbose
+        if level <= verbose:
+            total_msg = (level - 1) * "   "
+            total_msg += obj.status() + " " + msg
+            print(total_msg)
+        if (verbose >= 4) and (level <= verbose):
+            ts = time.time()
+            result = f(*args, **kw)
+            te = time.time()
+            sec = te - ts
+            output = total_msg + f" took {sec:.3f} seconds."
+            print(output)
+        else:
+            result = f(*args, **kw)
+        return result
+
+    return wrap
 
 
 class GraphMatchSolver(BaseEstimator):
@@ -20,11 +55,12 @@ class GraphMatchSolver(BaseEstimator):
         partial_match=None,
         rng=None,
         init=1.0,
-        verbose=False,
+        verbose=False,  # 0 is nothing, 1 is loops, 2 is loops + sub, 3, is loops + sub + timing
         shuffle_input=True,
         maximize=True,
         maxiter=30,
         tol=0.01,
+        optimal_transport=False,
     ):
         # TODO more input checking
         self.rng = check_random_state(rng)
@@ -142,22 +178,20 @@ class GraphMatchSolver(BaseEstimator):
             self.constant_sum = np.zeros(self.B.shape)
 
     def compute_step_direction(self, P):
-        self.print("Computing step direction")
         grad_fp = self.compute_gradient(P)
         Q = self.solve_assignment(grad_fp)
         return Q
 
+    @write_status("Solving assignment problem", 2)
     def solve_assignment(self, grad_fp):
-        self.print("Solving assignment problem")
         # [1] Algorithm 1 Line 4 - get direction Q by solving Eq. 8
-        # _, permutation = linear_sum_assignment(grad_fp, maximize=self.maximize)
         permutation = self.linear_sum_assignment(grad_fp)
         Q = np.eye(self.n_unseed)[permutation]
+        # TODO add GOAT as an option
         return Q
 
-    # permutation is here as a dummy for now
+    @write_status("Computing step size", 2)
     def compute_step_size(self, P, Q):
-        self.print("Computing step size")
         a, b = _compute_coefficients(
             P,
             Q,
@@ -172,8 +206,8 @@ class GraphMatchSolver(BaseEstimator):
             alpha = np.argmin([0, (b + a) * self.obj_func_scalar])
         return alpha
 
+    @write_status("Computing gradient", 2)
     def compute_gradient(self, P):
-        self.print("Computing gradient")
         gradient = _compute_gradient(
             P, self.A, self.B, self.AB, self.BA, self.constant_sum
         )
@@ -183,27 +217,27 @@ class GraphMatchSolver(BaseEstimator):
         return 0
 
     def status(self):
-        if hasattr(self, "n_iter"):
+        if self.n_iter > 0:
             return f"[Iteration: {self.n_iter}]"
         else:
             return "[Pre-loop]"
 
-    def print(self, msg):
-        if self.verbose:
-            status = self.status()
-            print(status + " " + msg)
-
     def check_converged(self, P, P_new):
         return np.linalg.norm(P - P_new) / np.sqrt(self.n_unseed) < self.tol
 
+    # def set_start_clock(self):
+    # self._start_time = time.time()
+
     def solve(self):
+        self.n_iter = 0
+        # self.set_start_time()
         self.check_outlier_cases()
         # self.set_reference_frame()
 
         P = self.initialize()
         self.compute_constant_terms()
         for n_iter in range(self.maxiter):
-            self.n_iter = n_iter
+            self.n_iter = n_iter + 1
 
             Q = self.compute_step_direction(P)
             alpha = self.compute_step_size(P, Q)
@@ -213,13 +247,14 @@ class GraphMatchSolver(BaseEstimator):
 
             if self.check_converged(P, P_new):
                 self.converged = True
+                P = P_new
                 break
             P = P_new
 
         self.finalize(P)
 
+    @write_status("Initializing", 1)
     def initialize(self):
-        self.print("Initializing")
         if isinstance(self.init, float):
             n_unseed = self.n_unseed
             rng = self.rng
@@ -241,9 +276,8 @@ class GraphMatchSolver(BaseEstimator):
         self.converged = False
         return P
 
+    @write_status("Finalizing assignment", 1)
     def finalize(self, P):
-        self.print("Finalizing permutation")
-        # P = self.unset_reference_frame(P)
         self.P_final_ = P
 
         permutation = self.linear_sum_assignment(P)
@@ -258,11 +292,6 @@ class GraphMatchSolver(BaseEstimator):
         P_perm = P[row_perm]
         _, permutation = linear_sum_assignment(P_perm, maximize=self.maximize)
         return permutation[undo_row_perm]
-
-    # def unset_reference_frame(self, P):
-    #     reverse_perm = self._reverse_permutation
-    #     P = P[:, reverse_perm]
-    #     return P
 
 
 def _permute_multilayer(adjacency, permutation, rows=True, columns=True):
@@ -331,20 +360,6 @@ def _compute_coefficients(
     b = b_cross + b_intra
 
     return a, b
-
-
-def timer(f):
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = time.time()
-        result = f(*args, **kw)
-        te = time.time()
-        sec = te - ts
-        output = f"Function {f.__name__} took {sec:.3f} seconds."
-        print(output)
-        return result
-
-    return wrap
 
 
 # REF: https://github.com/microsoft/graspologic/blob/dev/graspologic/match/qap.py

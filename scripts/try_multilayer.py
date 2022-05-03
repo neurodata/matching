@@ -56,6 +56,18 @@ glue("ipsi_p", ipsi_p)
 contra_p = 0.2
 glue("contra_p", contra_p)
 
+#%%
+contra_rho = 1.0
+# simulate the correlated subgraphs
+A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+AB, BA = er_corr(n_side, contra_p, contra_rho, directed=True)
+solver = GraphMatchSolver(A, B, verbose=4)
+solver.solve()
+match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
+match_ratio
+
+#%%
+
 rows = []
 for contra_rho in np.linspace(0, 1, 11):
     for sim in tqdm(range(n_sims)):
@@ -134,15 +146,7 @@ ax.set_ylabel("Matching accuracy")
 ax.set_xlabel("Contralateral edge correlation")
 sns.move_legend(ax, loc="upper left", title="Method", frameon=True)
 gluefig("match_ratio_by_contra_rho", fig)
-#%%
-contra_rho = 1.0
-# simulate the correlated subgraphs
-A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
-AB, BA = er_corr(n_side, contra_p, contra_rho, directed=True)
-solver = GraphMatchSolver(A, B)
-solver.solve()
-match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
-match_ratio
+
 
 #%%
 # A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
@@ -185,3 +189,33 @@ for i in range(100):
     mean += diff / 100
 
 mean
+
+#%%
+from functools import wraps
+
+
+def timer(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time.time()
+        result = f(*args, **kw)
+        te = time.time()
+        sec = te - ts
+        output = f"Function {f.__name__} took {sec:.3f} seconds."
+        print(output)
+        return result
+
+    return wrap
+
+
+class MyCount:
+    def __init__(self, x):
+        self.x = x
+
+    @timer
+    def count(self):
+        print(self.x + 1)
+
+
+mc = MyCount(4)
+mc.count()
