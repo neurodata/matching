@@ -1,5 +1,5 @@
 #%% [markdown]
-# Benchmarks
+# # Benchmarks
 
 #%%
 import time
