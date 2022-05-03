@@ -262,7 +262,15 @@ const thebe_selector_output = ".output, .cell_output"
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="graph-matching-for-neuroscience">
 <h1>Graph matching for neuroscience<a class="headerlink" href="#graph-matching-for-neuroscience" title="Permalink to this headline">¶</a></h1>
-<p><span class="math notranslate nohighlight">\(\sum_{i=1}^L \|A_{LL} - P A_{RR} P^T\|_F^2 + \sum_{i=1}^L \|A_{LL} - P A_{RR} P^T\|_F^2\)</span></p>
+<p><span class="math notranslate nohighlight">\(\min_{P \in \mathcal{P}_s} \left [ \sum_{i=1}^K \|A_{LL}^{(i)} - P A_{RR}^{(i)} P^T\|_F^2 + \sum_{i=1}^K \|A_{LR}^{(i)} P^T - P A_{RL}^{(i)} \|_F^2 + tr(S P^T) \right ]\)</span></p>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathcal{P}_s\)</span> is the set of permutation matrices <em>which respect fixed seeds, <span class="math notranslate nohighlight">\(s\)</span>,</em> where the seeds give a known correspondence between some of the neurons.</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_{LL}\)</span> and <span class="math notranslate nohighlight">\(A_{RR}\)</span> are the within-hemisphere (ipsilateral) subgraphs.</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_{LR}\)</span> and <span class="math notranslate nohighlight">\(A_{RL}\)</span> are the between-hemisphere (contralateral) subgraphs.</p></li>
+<li><p><span class="math notranslate nohighlight">\(S\)</span> is a matrix of similarity scores between neurons, e.g. morphology (NBLAST).</p></li>
+<li><p><span class="math notranslate nohighlight">\(K\)</span> is the number of <em>layers</em> or edge types e.g. axo-axonic, axo-dendritic, etc.</p></li>
+</ul>
 </div>
 
     <script type="text/x-thebe-config">
