@@ -2,6 +2,7 @@
 # # Benchmarks
 
 #%%
+import datetime
 import time
 
 import matplotlib.pyplot as plt
@@ -132,3 +133,10 @@ results = pd.DataFrame(rows)
 #%%
 fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 sns.barplot(data=results, x="transport", y="match_ratio", ax=ax)
+
+#%%
+
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print(f"Script took {delta}")
+print(f"Completed at {datetime.datetime.now()}")
