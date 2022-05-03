@@ -109,4 +109,26 @@ sns.lineplot(data=results, x="second_layer_rho", y="match_ratio", ax=ax)
 
 gluefig("accuracy_by_seeds", fig)
 
+#%% [markdown]
+# ## Optimal transport
 #%%
+# REF: Figure 2B of https://arxiv.org/abs/2111.05366
+n_sims = 25
+n = 250
+p = np.log(n) / n
+rows = []
+for sim in tqdm(range(n_sims)):
+    A, B = er_corr(n, p, 1.0)
+    perm = rng.permutation(n)
+    undo_perm = np.argsort(perm)
+    B = B[perm][:, perm]
+    for transport in [True, False]:
+        solver = GraphMatchSolver(A, B, transport=transport, transport_regularizer=200)
+        solver.solve()
+        match_ratio = (solver.permutation_ == undo_perm).mean()
+        rows.append({"transport": transport, "match_ratio": match_ratio})
+results = pd.DataFrame(rows)
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+sns.barplot(data=results, x="transport", y="match_ratio", ax=ax)

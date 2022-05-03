@@ -59,7 +59,11 @@ class GraphMatchSolver(BaseEstimator):
         maximize=True,
         maxiter=30,
         tol=0.01,
-        optimal_transport=False,
+        transport=False,
+        transport_regularizer=100,
+        transport_tolerance=5e-2,
+        transport_implementation="pot",
+        transport_maxiter=500,
     ):
         # TODO more input checking
         self.rng = check_random_state(rng)
@@ -69,6 +73,12 @@ class GraphMatchSolver(BaseEstimator):
         self.maximize = maximize
         self.maxiter = maxiter
         self.tol = tol
+
+        self.transport = transport
+        self.transport_regularizer = transport_regularizer
+        self.transport_tolerance = transport_tolerance
+        self.transport_implementation = transport_implementation
+        self.transport_maxiter = transport_maxiter
 
         if maximize:
             self.obj_func_scalar = -1
@@ -146,7 +156,8 @@ class GraphMatchSolver(BaseEstimator):
         for n_iter in range(self.maxiter):
             self.n_iter = n_iter + 1
 
-            Q = self.compute_step_direction(P)
+            gradient = self.compute_gradient(P)
+            Q = self.compute_step_direction(gradient)
             alpha = self.compute_step_size(P, Q)
 
             # take a step in this direction
@@ -207,10 +218,9 @@ class GraphMatchSolver(BaseEstimator):
         else:
             self.constant_sum = np.zeros(self.B.shape)
 
-    def compute_step_direction(self, P):
-        grad_fp = self.compute_gradient(P)
-        Q = self.solve_assignment(grad_fp)
-        return Q
+    # def compute_step_direction(self, P):
+
+    # return Q
 
     @write_status("Computing gradient", 2)
     def compute_gradient(self, P):
@@ -220,11 +230,13 @@ class GraphMatchSolver(BaseEstimator):
         return gradient
 
     @write_status("Solving assignment problem", 2)
-    def solve_assignment(self, grad_fp):
+    def compute_step_direction(self, gradient):
         # [1] Algorithm 1 Line 4 - get direction Q by solving Eq. 8
-        permutation = self.linear_sum_assignment(grad_fp)
-        Q = np.eye(self.n_unseed)[permutation]
-        # TODO add GOAT as an option
+        if self.transport:
+            Q = self.linear_sum_transport(gradient)
+        else:
+            permutation = self.linear_sum_assignment(gradient)
+            Q = np.eye(self.n_unseed)[permutation]
         return Q
 
     def linear_sum_assignment(self, P):
@@ -233,6 +245,32 @@ class GraphMatchSolver(BaseEstimator):
         P_perm = P[row_perm]
         _, permutation = linear_sum_assignment(P_perm, maximize=self.maximize)
         return permutation[undo_row_perm]
+
+    def linear_sum_transport(
+        self,
+        P,
+    ):
+        maximize = self.maximize
+        reg = self.transport_regularizer
+
+        power = -1 if maximize else 1
+        lamb = reg / np.max(np.abs(P))
+        if self.transport_implementation == "pot":
+            ones = np.ones(P.shape[0])
+            P_eps = sinkhorn(
+                ones,
+                ones,
+                P,
+                power / lamb,
+                stopInnerThr=self.transport_tolerance,
+                numItermax=self.transport_maxiter,
+            )
+        elif self.transport_implementation == "ds":
+            P = np.exp(lamb * power * P)
+            P_eps = _doubly_stochastic(
+                P, self.transport_tolerance, self.transport_maxiter
+            )
+        return P_eps
 
     @write_status("Computing step size", 2)
     def compute_step_size(self, P, Q):
@@ -410,3 +448,6 @@ def _split_matrix(
     nonseed_to_seed = np.array(nonseed_to_seed)
     nonseed_to_nonseed = np.array(nonseed_to_nonseed)
     return seed_to_seed, seed_to_nonseed, nonseed_to_seed, nonseed_to_nonseed
+
+
+from ot import sinkhorn
