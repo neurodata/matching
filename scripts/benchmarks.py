@@ -64,7 +64,7 @@ contra_rho = 0.6
 n_sims = 1000
 rows = []
 for n_seeds in [0, 1, 2, 3, 4, 5]:
-    for sim in tqdm(range(n_sims)):
+    for sim in tqdm(range(n_sims), leave=False):
         if n_seeds > 0:
             seeds = np.arange(n_seeds)
             partial_match = np.stack((seeds, seeds)).T
@@ -94,7 +94,7 @@ gluefig("accuracy_by_seeds", fig)
 n_sims = 1000
 rows = []
 for second_layer_rho in np.linspace(0, 1, 6):
-    for sim in tqdm(range(n_sims)):
+    for sim in tqdm(range(n_sims), leave=False):
         A1, B1 = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
         A2, B2 = er_corr(n_side, contra_p, second_layer_rho, directed=True)
         solver = GraphMatchSolver([A1, A2], [B1, B2])
@@ -118,7 +118,7 @@ n_sims = 25
 n = 250
 p = np.log(n) / n
 rows = []
-for sim in tqdm(range(n_sims)):
+for sim in tqdm(range(n_sims),leave=False):
     A, B = er_corr(n, p, 1.0)
     perm = rng.permutation(n)
     undo_perm = np.argsort(perm)
@@ -141,7 +141,7 @@ sns.barplot(data=results, x="transport", y="match_ratio", ax=ax)
 n_sims = 1000
 rows = []
 for lamb in np.linspace(0, 10, 6):
-    for sim in tqdm(range(n_sims)):
+    for sim in tqdm(range(n_sims), leave=False):
 
         A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
         S = lamb * np.eye(B.shape[0])
