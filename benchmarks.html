@@ -401,7 +401,7 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">n_seeds</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">n_seeds</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">seeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_seeds</span><span class="p">)</span>
             <span class="n">partial_match</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">seeds</span><span class="p">,</span> <span class="n">seeds</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
@@ -418,12 +418,7 @@ const thebe_selector_output = ".output, .cell_output"
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:04&lt;00:00, 206.06it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 664.50it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 729.60it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 760.55it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 732.21it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 761.71it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                                                                                     
 </pre></div>
 </div>
 </div>
@@ -451,7 +446,7 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">second_layer_rho</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">ipsi_p</span><span class="p">,</span> <span class="n">ipsi_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">A2</span><span class="p">,</span> <span class="n">B2</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">contra_p</span><span class="p">,</span> <span class="n">second_layer_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">solver</span> <span class="o">=</span> <span class="n">GraphMatchSolver</span><span class="p">([</span><span class="n">A1</span><span class="p">,</span> <span class="n">A2</span><span class="p">],</span> <span class="p">[</span><span class="n">B1</span><span class="p">,</span> <span class="n">B2</span><span class="p">])</span>
@@ -463,12 +458,7 @@ const thebe_selector_output = ".output, .cell_output"
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:02&lt;00:00, 489.67it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 524.17it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 551.11it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 541.79it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 538.25it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 598.74it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                                                                                     
 </pre></div>
 </div>
 </div>
@@ -497,7 +487,7 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="n">n</span> <span class="o">=</span> <span class="mi">250</span>
 <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">)):</span>
+<span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span><span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
     <span class="n">perm</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
     <span class="n">undo_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
@@ -514,7 +504,7 @@ const thebe_selector_output = ".output, .cell_output"
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  0%|                                                                                                                                                                                         | 0/25 [00:00&lt;?, ?it/s]/Users/bpedigo/JHU_code/neuro-matching/matching/.venv/lib/python3.9/site-packages/ot/bregman.py:517: UserWarning: Sinkhorn did not converge. You might want to increase the number of iterations `numItermax` or the regularization parameter `reg`.
   warnings.warn(&quot;Sinkhorn did not converge. You might want to &quot;
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 25/25 [00:30&lt;00:00,  1.21s/it]
+                                                                                                                                                                                                                     
 </pre></div>
 </div>
 </div>
@@ -541,7 +531,7 @@ const thebe_selector_output = ".output, .cell_output"
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">lamb</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">ipsi_p</span><span class="p">,</span> <span class="n">ipsi_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">lamb</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -559,12 +549,7 @@ const thebe_selector_output = ".output, .cell_output"
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 508.61it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 636.74it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 688.42it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 697.18it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 740.72it/s]
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:01&lt;00:00, 769.79it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                                          
 </pre></div>
 </div>
 </div>
@@ -597,8 +582,8 @@ const thebe_selector_output = ".output, .cell_output"
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Script took 0:01:07.404119
-Completed at 2022-05-03 16:09:32.128742
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Script took 0:00:47.719488
+Completed at 2022-05-03 16:16:16.126531
 </pre></div>
 </div>
 </div>
