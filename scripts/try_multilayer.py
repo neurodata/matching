@@ -57,14 +57,30 @@ contra_p = 0.2
 glue("contra_p", contra_p)
 
 #%%
-contra_rho = 1.0
+contra_rho = 0.6
 # simulate the correlated subgraphs
-A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
-AB, BA = er_corr(n_side, contra_p, contra_rho, directed=True)
-solver = GraphMatchSolver(A, B, verbose=4)
-solver.solve()
-match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
-match_ratio
+n_sims = 1000
+rows = []
+for n_seeds in [0, 1, 2, 3, 4, 5]:
+    for sim in tqdm(range(n_sims)):
+        if n_seeds > 0:
+            seeds = np.arange(n_seeds)
+            partial_match = np.stack((seeds, seeds)).T
+        else:
+            partial_match = None
+        A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        AB, BA = er_corr(n_side, contra_p, contra_rho, directed=True)
+        solver = GraphMatchSolver(A, B, verbose=0, partial_match=partial_match)
+        solver.solve()
+        match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
+        rows.append({"n_seeds": n_seeds, "match_ratio": match_ratio})
+results = pd.DataFrame(rows)
+
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+sns.lineplot(data=results, x="n_seeds", y="match_ratio", ax=ax)
 
 #%%
 

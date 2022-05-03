@@ -1,0 +1,76 @@
+#%%
+# Simulation
+
+from abc import ABC
+import datetime
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from graspologic.simulations import er_corr
+from pkg.io import FIG_PATH, OUT_PATH
+from pkg.io import glue as default_glue
+from pkg.io import savefig
+from pkg.match import GraphMatchSolver
+from pkg.plot import set_theme
+from tqdm import tqdm
+
+DISPLAY_FIGS = True
+
+FILENAME = "benchmarks"
+
+OUT_PATH = OUT_PATH / FILENAME
+
+FIG_PATH = FIG_PATH / FILENAME
+
+
+def glue(name, var, **kwargs):
+    default_glue(name, var, FILENAME, **kwargs)
+
+
+def gluefig(name, fig, **kwargs):
+    savefig(name, foldername=FILENAME, **kwargs)
+
+    glue(name, fig, figure=True)
+
+    if not DISPLAY_FIGS:
+        plt.close()
+
+
+t0 = time.time()
+set_theme()
+rng = np.random.default_rng(8888)
+
+
+#%%
+n_side = 10
+glue("n_side", n_side)
+n_sims = 1000
+glue("n_sims", n_sims, form="long")
+ipsi_rho = 0.8
+glue("ipsi_rho", ipsi_rho)
+ipsi_p = 0.3
+glue("ipsi_p", ipsi_p)
+contra_p = 0.2
+glue("contra_p", contra_p)
+
+contra_rho = 0.6
+# simulate the correlated subgraphs
+n_sims = 1000
+rows = []
+for n_seeds in [0, 1, 2, 3, 4, 5]:
+    for sim in tqdm(range(n_sims)):
+        if n_seeds > 0:
+            seeds = np.arange(n_seeds)
+            partial_match = np.stack((seeds, seeds)).T
+        else:
+            partial_match = None
+        A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        AB, BA = er_corr(n_side, contra_p, contra_rho, directed=True)
+        solver = GraphMatchSolver(A, B, verbose=0, partial_match=partial_match)
+        solver.solve()
+        match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
+        rows.append({"n_seeds": n_seeds, "match_ratio": match_ratio})
+results = pd.DataFrame(rows)

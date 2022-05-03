@@ -1,6 +1,5 @@
 import time
 from functools import wraps
-from nbformat import write
 
 import numpy as np
 from numba import jit
@@ -81,6 +80,7 @@ class GraphMatchSolver(BaseEstimator):
             self._seeded = False
         else:
             self._seeded = True
+        self.partial_match = partial_match
 
         # TODO input validation
         # TODO seeds
@@ -114,6 +114,8 @@ class GraphMatchSolver(BaseEstimator):
         nonseed_B = np.setdiff1d(range(len(B[0])), partial_match[:, 1])
         perm_A = np.concatenate([partial_match[:, 0], nonseed_A])
         perm_B = np.concatenate([partial_match[:, 1], nonseed_B])
+        self._undo_perm_A = np.argsort(perm_A)
+        self._undo_perm_B = np.argsort(perm_B)
 
         # permute each (sub)graph appropriately
         A = _permute_multilayer(A, perm_A, rows=True, columns=True)
@@ -132,101 +134,6 @@ class GraphMatchSolver(BaseEstimator):
 
         self.n_unseed = self.A[0].shape[0]
         self.n_B = self.B[0].shape[0]
-
-    def permute(self, permutation):
-        self.B = _permute_multilayer(self.B, permutation, rows=True, columns=True)
-        self.AB = _permute_multilayer(self.AB, permutation, rows=False, columns=True)
-        self.BA = _permute_multilayer(self.BA, permutation, rows=True, columns=False)
-
-    # TODO
-    def check_outlier_cases(self):
-        pass
-
-    # side_perm = self.rng.permutation(self.n_unseed, 2 * self.n_unseed)
-    # perm = np.concatenate((np.arange(self.n_unseed), side_perm))
-    # TODO
-    # def set_reference_frame(self):
-    #     if self.shuffle_input:
-    #         perm = self.rng.permutation(self.n_B)
-
-    #         self._reverse_permutation = np.argsort(perm)
-
-    #         self.permute(perm)
-
-    #         # TODO permute seeds and anything else that could be added
-    #     else:
-    #         self._reverse_permutation = np.arange(self.n_unseed)
-
-    def compute_constant_terms(self):
-        if self._seeded:
-            n_layers = len(self.A)
-            ipsi = []
-            contra = []
-            for i in range(n_layers):
-                ipsi.append(
-                    self.A_ns[i] @ self.B_ns[i].T + self.A_sn[i].T @ self.B_sn[i]
-                )
-                contra.append(
-                    self.AB_ns[i] @ self.BA_ns[i].T + self.BA_sn[i].T @ self.AB_sn[i]
-                )
-            ipsi = np.array(ipsi)
-            contra = np.array(contra)
-            self.ipsi_constant_sum = ipsi
-            self.contra_constant_sum = contra
-            self.constant_sum = ipsi + contra
-        else:
-            self.constant_sum = np.zeros(self.B.shape)
-
-    def compute_step_direction(self, P):
-        grad_fp = self.compute_gradient(P)
-        Q = self.solve_assignment(grad_fp)
-        return Q
-
-    @write_status("Solving assignment problem", 2)
-    def solve_assignment(self, grad_fp):
-        # [1] Algorithm 1 Line 4 - get direction Q by solving Eq. 8
-        permutation = self.linear_sum_assignment(grad_fp)
-        Q = np.eye(self.n_unseed)[permutation]
-        # TODO add GOAT as an option
-        return Q
-
-    @write_status("Computing step size", 2)
-    def compute_step_size(self, P, Q):
-        a, b = _compute_coefficients(
-            P,
-            Q,
-            self.A,
-            self.B,
-            self.AB,
-            self.BA,
-        )
-        if a * self.obj_func_scalar > 0 and 0 <= -b / (2 * a) <= 1:
-            alpha = -b / (2 * a)
-        else:
-            alpha = np.argmin([0, (b + a) * self.obj_func_scalar])
-        return alpha
-
-    @write_status("Computing gradient", 2)
-    def compute_gradient(self, P):
-        gradient = _compute_gradient(
-            P, self.A, self.B, self.AB, self.BA, self.constant_sum
-        )
-        return gradient
-
-    def compute_score(*args):
-        return 0
-
-    def status(self):
-        if self.n_iter > 0:
-            return f"[Iteration: {self.n_iter}]"
-        else:
-            return "[Pre-loop]"
-
-    def check_converged(self, P, P_new):
-        return np.linalg.norm(P - P_new) / np.sqrt(self.n_unseed) < self.tol
-
-    # def set_start_clock(self):
-    # self._start_time = time.time()
 
     def solve(self):
         self.n_iter = 0
@@ -253,6 +160,10 @@ class GraphMatchSolver(BaseEstimator):
 
         self.finalize(P)
 
+    # TODO
+    def check_outlier_cases(self):
+        pass
+
     @write_status("Initializing", 1)
     def initialize(self):
         if isinstance(self.init, float):
@@ -276,15 +187,45 @@ class GraphMatchSolver(BaseEstimator):
         self.converged = False
         return P
 
-    @write_status("Finalizing assignment", 1)
-    def finalize(self, P):
-        self.P_final_ = P
+    def compute_constant_terms(self):
+        if self._seeded:
+            n_layers = len(self.A)
+            ipsi = []
+            contra = []
+            for i in range(n_layers):
+                ipsi.append(
+                    self.A_ns[i] @ self.B_ns[i].T + self.A_sn[i].T @ self.B_sn[i]
+                )
+                contra.append(
+                    self.AB_ns[i] @ self.BA_ns[i].T + self.BA_sn[i].T @ self.AB_sn[i]
+                )
+            ipsi = np.array(ipsi)
+            contra = np.array(contra)
+            self.ipsi_constant_sum = ipsi
+            self.contra_constant_sum = contra
+            self.constant_sum = ipsi + contra
+        else:
+            self.constant_sum = np.zeros(self.B.shape)
 
-        permutation = self.linear_sum_assignment(P)
-        self.permutation_ = permutation
+    def compute_step_direction(self, P):
+        grad_fp = self.compute_gradient(P)
+        Q = self.solve_assignment(grad_fp)
+        return Q
 
-        score = self.compute_score(permutation)
-        self.score_ = score
+    @write_status("Computing gradient", 2)
+    def compute_gradient(self, P):
+        gradient = _compute_gradient(
+            P, self.A, self.B, self.AB, self.BA, self.constant_sum
+        )
+        return gradient
+
+    @write_status("Solving assignment problem", 2)
+    def solve_assignment(self, grad_fp):
+        # [1] Algorithm 1 Line 4 - get direction Q by solving Eq. 8
+        permutation = self.linear_sum_assignment(grad_fp)
+        Q = np.eye(self.n_unseed)[permutation]
+        # TODO add GOAT as an option
+        return Q
 
     def linear_sum_assignment(self, P):
         row_perm = np.random.permutation(P.shape[1])
@@ -292,6 +233,54 @@ class GraphMatchSolver(BaseEstimator):
         P_perm = P[row_perm]
         _, permutation = linear_sum_assignment(P_perm, maximize=self.maximize)
         return permutation[undo_row_perm]
+
+    @write_status("Computing step size", 2)
+    def compute_step_size(self, P, Q):
+        a, b = _compute_coefficients(
+            P,
+            Q,
+            self.A,
+            self.B,
+            self.AB,
+            self.BA,
+            self.A_ns,
+            self.A_sn,
+            self.B_ns,
+            self.B_sn,
+            self.AB_ns,
+            self.AB_sn,
+            self.BA_ns,
+            self.BA_sn,
+        )
+        if a * self.obj_func_scalar > 0 and 0 <= -b / (2 * a) <= 1:
+            alpha = -b / (2 * a)
+        else:
+            alpha = np.argmin([0, (b + a) * self.obj_func_scalar])
+        return alpha
+
+    def check_converged(self, P, P_new):
+        return np.linalg.norm(P - P_new) / np.sqrt(self.n_unseed) < self.tol
+
+    @write_status("Finalizing assignment", 1)
+    def finalize(self, P):
+        self.P_final_ = P
+
+        permutation = self.linear_sum_assignment(P)
+        permutation += len(self.partial_match[:, 1])  # TODO this is not robust
+        permutation = np.concatenate((self.partial_match[:, 1], permutation))
+        self.permutation_ = permutation
+
+        score = self.compute_score(permutation)
+        self.score_ = score
+
+    def compute_score(*args):
+        return 0
+
+    def status(self):
+        if self.n_iter > 0:
+            return f"[Iteration: {self.n_iter}]"
+        else:
+            return "[Pre-loop]"
 
 
 def _permute_multilayer(adjacency, permutation, rows=True, columns=True):
@@ -329,7 +318,7 @@ def _compute_gradient(P, A, B, AB, BA, const_sum):
     return grad
 
 
-# A_ns, A_sn, B_ns, B_sn, AB_ns, AB_sn,
+#
 
 
 @jit(nopython=True)
@@ -340,6 +329,14 @@ def _compute_coefficients(
     B,
     AB,
     BA,
+    A_ns,
+    A_sn,
+    B_ns,
+    B_sn,
+    AB_ns,
+    AB_sn,
+    BA_ns,
+    BA_sn,
 ):
     R = P - Q
     # TODO make these "smart" traces like in the scipy code, couldn't hurt
@@ -353,8 +350,12 @@ def _compute_coefficients(
     for i in range(n_layers):
         a_cross += np.trace(AB[i].T @ R @ BA[i] @ R)
         b_cross += np.trace(AB[i].T @ R @ BA[i] @ Q) + np.trace(AB[i].T @ Q @ BA[i] @ R)
+        b_cross += np.trace(AB_ns[i].T @ R @ BA_ns[i]) + np.trace(
+            AB_sn[i].T @ BA_sn[i] @ R
+        )
         a_intra += np.trace(A[i] @ R @ B[i].T @ R.T)
-        b_intra += np.trace(A[i] @ Q @ B[i].T @ R.T + A[i] @ R @ B[i].T @ Q.T)
+        b_intra += np.trace(A[i] @ Q @ B[i].T @ R.T) + np.trace(A[i] @ R @ B[i].T @ Q.T)
+        b_intra += np.trace(A_ns[i].T @ R @ B_ns[i]) + np.trace(A_sn[i] @ R @ B_sn[i].T)
 
     a = a_cross + a_intra
     b = b_cross + b_intra
