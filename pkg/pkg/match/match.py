@@ -66,9 +66,9 @@ class GraphMatchSolver(BaseEstimator):
         BA = _check_input_matrix(BA)
 
         if AB is None:
-            AB = np.zeros((A.shape[1], B.shape[1]))
+            AB = np.zeros((A.shape[0], A.shape[1], B.shape[1]))
         if BA is None:
-            BA = np.zeros((B.shape[1], A.shape[1]))
+            BA = np.zeros((B.shape[0], B.shape[1], A.shape[1]))
 
         n_seeds = len(partial_match)
 
@@ -150,7 +150,8 @@ class GraphMatchSolver(BaseEstimator):
     def solve_assignment(self, grad_fp):
         self.print("Solving assignment problem")
         # [1] Algorithm 1 Line 4 - get direction Q by solving Eq. 8
-        _, permutation = linear_sum_assignment(grad_fp, maximize=self.maximize)
+        # _, permutation = linear_sum_assignment(grad_fp, maximize=self.maximize)
+        permutation = self.linear_sum_assignment(grad_fp)
         Q = np.eye(self.n_unseed)[permutation]
         return Q
 
@@ -245,11 +246,18 @@ class GraphMatchSolver(BaseEstimator):
         # P = self.unset_reference_frame(P)
         self.P_final_ = P
 
-        _, permutation = linear_sum_assignment(P, maximize=self.maximize)
+        permutation = self.linear_sum_assignment(P)
         self.permutation_ = permutation
 
         score = self.compute_score(permutation)
         self.score_ = score
+
+    def linear_sum_assignment(self, P):
+        row_perm = np.random.permutation(P.shape[1])
+        undo_row_perm = np.argsort(row_perm)
+        P_perm = P[row_perm]
+        _, permutation = linear_sum_assignment(P_perm, maximize=self.maximize)
+        return permutation[undo_row_perm]
 
     # def unset_reference_frame(self, P):
     #     reverse_perm = self._reverse_permutation
@@ -289,7 +297,6 @@ def _compute_gradient(P, A, B, AB, BA, const_sum):
             + BA[i].T @ P.T @ AB[i]
             + const_sum[i]
         )
-
     return grad
 
 
