@@ -1,8 +1,7 @@
-#%%
-# Simulation
+#%% [markdown]
+# Benchmarks
 
-from abc import ABC
-import datetime
+#%%
 import time
 
 import matplotlib.pyplot as plt
@@ -56,6 +55,9 @@ glue("ipsi_p", ipsi_p)
 contra_p = 0.2
 glue("contra_p", contra_p)
 
+#%% [markdown]
+# ## Seeds
+#%%
 contra_rho = 0.6
 # simulate the correlated subgraphs
 n_sims = 1000
@@ -74,3 +76,37 @@ for n_seeds in [0, 1, 2, 3, 4, 5]:
         match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
         rows.append({"n_seeds": n_seeds, "match_ratio": match_ratio})
 results = pd.DataFrame(rows)
+
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+sns.lineplot(data=results, x="n_seeds", y="match_ratio", ax=ax)
+
+gluefig("accuracy_by_seeds", fig)
+
+#%% [markdown]
+# ## Multilayer
+#%%
+
+# simulate the correlated subgraphs
+n_sims = 1000
+rows = []
+for second_layer_rho in np.linspace(0, 1, 6):
+    for sim in tqdm(range(n_sims)):
+        A1, B1 = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        A2, B2 = er_corr(n_side, contra_p, second_layer_rho, directed=True)
+        solver = GraphMatchSolver([A1, A2], [B1, B2])
+        solver.solve()
+        match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
+        rows.append({"second_layer_rho": second_layer_rho, "match_ratio": match_ratio})
+results = pd.DataFrame(rows)
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+sns.lineplot(data=results, x="second_layer_rho", y="match_ratio", ax=ax)
+
+gluefig("accuracy_by_seeds", fig)
+
+#%%
