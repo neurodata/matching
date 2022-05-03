@@ -134,6 +134,36 @@ results = pd.DataFrame(rows)
 fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 sns.barplot(data=results, x="transport", y="match_ratio", ax=ax)
 
+#%% [markdown]
+# ## Similarity
+#%%
+
+n_sims = 1000
+rows = []
+for lamb in np.linspace(0, 10, 6):
+    for sim in tqdm(range(n_sims)):
+
+        A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        S = lamb * np.eye(B.shape[0])
+        perm = rng.permutation(n_side)
+        undo_perm = np.argsort(perm)
+        S = S[:, perm]
+
+        solver = GraphMatchSolver(A, B, similarity=S)
+        solver.solve()
+        match_ratio = (solver.permutation_ == undo_perm).mean()
+        rows.append({"lambda": lamb, "match_ratio": match_ratio})
+
+results = pd.DataFrame(rows)
+
+#%%
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+sns.lineplot(data=results, x="lambda", y="match_ratio", ax=ax)
+
+#%% [markdown]
+# ## End
 #%%
 
 elapsed = time.time() - t0

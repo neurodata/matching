@@ -2,11 +2,12 @@ import time
 from functools import wraps
 
 import numpy as np
+from graspologic.types import Tuple
 from numba import jit
+from ot import sinkhorn
 from scipy.optimize import linear_sum_assignment
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
-from graspologic.types import Dict, Tuple
 
 
 def parametrized(dec):
@@ -111,12 +112,16 @@ class GraphMatchSolver(BaseEstimator):
         AB = _check_input_matrix(AB)
         BA = _check_input_matrix(BA)
 
+        self.n_A = A[0].shape[0]
+        self.n_B = B[0].shape[0]
+
         if AB is None:
             AB = np.zeros((A.shape[0], A.shape[1], B.shape[1]))
         if BA is None:
             BA = np.zeros((B.shape[0], B.shape[1], A.shape[1]))
 
         n_seeds = len(partial_match)
+        self.n_seeds = n_seeds
 
         # set up so that seeds are first and we can grab subgraphs easily
         # TODO could also do this slightly more efficiently just w/ smart indexing?
@@ -142,14 +147,17 @@ class GraphMatchSolver(BaseEstimator):
         self.AB_ss, self.AB_sn, self.AB_ns, self.AB = _split_matrix(AB, n_seeds)
         self.BA_ss, self.BA_sn, self.BA_ns, self.BA = _split_matrix(BA, n_seeds)
 
-        self.n_unseed = self.A[0].shape[0]
-        self.n_B = self.B[0].shape[0]
+        self.n_unseed = self.B[0].shape[0]
+
+        if similarity is None:
+            similarity = np.zeros((self.n_A, self.n_B))
+
+        similarity = similarity[perm_A][:, perm_B]
+        self.S_ss, self.S_sn, self.S_ns, self.S = _split_matrix(similarity, n_seeds)
 
     def solve(self):
         self.n_iter = 0
-        # self.set_start_time()
         self.check_outlier_cases()
-        # self.set_reference_frame()
 
         P = self.initialize()
         self.compute_constant_terms()
@@ -198,7 +206,9 @@ class GraphMatchSolver(BaseEstimator):
         self.converged = False
         return P
 
+    @write_status("Computing constant terms", 2)
     def compute_constant_terms(self):
+        self.constant_sum = np.zeros(self.B.shape)
         if self._seeded:
             n_layers = len(self.A)
             ipsi = []
@@ -215,12 +225,7 @@ class GraphMatchSolver(BaseEstimator):
             self.ipsi_constant_sum = ipsi
             self.contra_constant_sum = contra
             self.constant_sum = ipsi + contra
-        else:
-            self.constant_sum = np.zeros(self.B.shape)
-
-    # def compute_step_direction(self, P):
-
-    # return Q
+        self.constant_sum += self.S
 
     @write_status("Computing gradient", 2)
     def compute_gradient(self, P):
@@ -289,6 +294,7 @@ class GraphMatchSolver(BaseEstimator):
             self.AB_sn,
             self.BA_ns,
             self.BA_sn,
+            self.S,
         )
         if a * self.obj_func_scalar > 0 and 0 <= -b / (2 * a) <= 1:
             alpha = -b / (2 * a)
@@ -361,20 +367,7 @@ def _compute_gradient(P, A, B, AB, BA, const_sum):
 
 @jit(nopython=True)
 def _compute_coefficients(
-    P,
-    Q,
-    A,
-    B,
-    AB,
-    BA,
-    A_ns,
-    A_sn,
-    B_ns,
-    B_sn,
-    AB_ns,
-    AB_sn,
-    BA_ns,
-    BA_sn,
+    P, Q, A, B, AB, BA, A_ns, A_sn, B_ns, B_sn, AB_ns, AB_sn, BA_ns, BA_sn, S
 ):
     R = P - Q
     # TODO make these "smart" traces like in the scipy code, couldn't hurt
@@ -397,6 +390,7 @@ def _compute_coefficients(
 
     a = a_cross + a_intra
     b = b_cross + b_intra
+    b += np.sum(S * R)  # equivalent to S.T @ R
 
     return a, b
 
@@ -431,7 +425,9 @@ def _split_matrix(
     matrices: np.ndarray, n: int
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # definitions according to Seeded Graph Matching [2].
-    n_layers = matrices.shape[0]
+    if matrices.ndim == 2:
+        matrices = [matrices]
+    n_layers = len(matrices)
     seed_to_seed = []
     seed_to_nonseed = []
     nonseed_to_seed = []
@@ -448,6 +444,3 @@ def _split_matrix(
     nonseed_to_seed = np.array(nonseed_to_seed)
     nonseed_to_nonseed = np.array(nonseed_to_nonseed)
     return seed_to_seed, seed_to_nonseed, nonseed_to_seed, nonseed_to_nonseed
-
-
-from ot import sinkhorn
