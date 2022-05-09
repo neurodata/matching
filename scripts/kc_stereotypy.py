@@ -8,20 +8,21 @@
 #%%
 
 import datetime
-from re import S
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from giskard.plot import histplot, matrixplot
-from graspologic.match import GraphMatch
 from graspologic.plot import heatmap
+from graspologic.simulations import er_corr
 from graspologic.utils import binarize
 from pkg.data import load_maggot_graph, load_unmatched
 from pkg.io import glue as default_glue
 from pkg.io import savefig
 from pkg.plot import set_theme
+from scipy.optimize import linear_sum_assignment
 from tqdm import tqdm
 
 DISPLAY_FIGS = True
@@ -149,59 +150,81 @@ gluefig("left_right_adjs", fig)
 #%%
 
 
-def compute_density(adjacency, loops=False):
-    if not loops:
-        triu_inds = np.triu_indices_from(adjacency, k=1)
-        tril_inds = np.tril_indices_from(adjacency, k=-1)
-        n_edges = np.count_nonzero(adjacency[triu_inds]) + np.count_nonzero(
-            adjacency[tril_inds]
-        )
-    else:
-        n_edges = np.count_nonzero(adjacency)
-    n_nodes = adjacency.shape[0]
-    n_possible = n_nodes**2
-    if not loops:
-        n_possible -= n_nodes
+# def compute_density(adjacency, loops=False):
+#     if not loops:
+#         triu_inds = np.triu_indices_from(adjacency, k=1)
+#         tril_inds = np.tril_indices_from(adjacency, k=-1)
+#         n_edges = np.count_nonzero(adjacency[triu_inds]) + np.count_nonzero(
+#             adjacency[tril_inds]
+#         )
+#     else:
+#         n_edges = np.count_nonzero(adjacency)
+#     n_nodes = adjacency.shape[0]
+#     n_possible = n_nodes**2
+#     if not loops:
+#         n_possible -= n_nodes
+#     return n_edges / n_possible
+
+
+# def compute_alignment_strength(A, B, perm=None):
+#     n = A.shape[0]
+#     if perm is not None:
+#         B_perm = B[perm][:, perm]
+#     else:
+#         B_perm = B
+#     n_disagreements = np.count_nonzero(A - B_perm)  # TODO this assumes loopless
+#     p_disagreements = n_disagreements / (n**2 - n)
+#     densityA = compute_density(A)
+#     densityB = compute_density(B)
+#     denominator = densityA * (1 - densityB) + densityB * (1 - densityA)
+#     alignment_strength = 1 - p_disagreements / denominator
+#     return alignment_strength
+
+
+def get_subgraph(A):
+    return A[:n_upns, n_upns:]
+
+
+def match_seeded_subgraphs(A, B):
+    """Assumes A is smaller"""
+    assert A.shape[0] == B.shape[0]
+    assert A.shape[1] <= B.shape[1]
+    product = A.T @ B
+    row_inds, col_inds = linear_sum_assignment(product, maximize=True)
+    assert (row_inds == np.arange(A.shape[1])).all()
+    return col_inds[: A.shape[1]], B[:, col_inds]
+
+
+def compute_density_subgraph(adjacency):
+    n_edges = np.count_nonzero(adjacency)
+    n_possible = adjacency.size
     return n_edges / n_possible
 
 
-def compute_alignment_strength(A, B, perm=None):
-    n = A.shape[0]
+def compute_alignment_strength_subgraph(A, B, perm=None):
+    n_possible = A.size
     if perm is not None:
         B_perm = B[perm][:, perm]
     else:
         B_perm = B
     n_disagreements = np.count_nonzero(A - B_perm)  # TODO this assumes loopless
-    p_disagreements = n_disagreements / (n**2 - n)
-    densityA = compute_density(A)
-    densityB = compute_density(B)
+    p_disagreements = n_disagreements / n_possible
+    densityA = compute_density_subgraph(A)
+    densityB = compute_density_subgraph(B)
     denominator = densityA * (1 - densityB) + densityB * (1 - densityA)
     alignment_strength = 1 - p_disagreements / denominator
     return alignment_strength
 
 
-def obj_func(A, B, perm):
-    PBPT = B[perm[: len(A)]][:, perm[: len(A)]]
-    return np.linalg.norm(A - PBPT, ord="fro") ** 2, PBPT
-
-
 #%%
 
-A = right_adj
-B = left_adj
-n_init = 1
+A_sub = get_subgraph(right_adj)
+B_sub = get_subgraph(left_adj)
 
-gm = GraphMatch(n_init=n_init)
+perm_inds, B_sub_perm = match_seeded_subgraphs(A_sub, B_sub)
 
-gm.fit(A, B, seeds_A=np.arange(n_upns), seeds_B=np.arange(n_upns))
+observed_alignment = compute_alignment_strength_subgraph(A_sub, B_sub_perm)
 
-perm_inds = gm.perm_inds_
-score, B_perm = obj_func(A, B, perm_inds)
-alignment = compute_alignment_strength(A, B_perm)
-glue("alignment_observed", alignment)
-
-rows = []
-rows.append({"data": "Observed", "score": score, "alignment": alignment})
 
 #%% [markdown]
 # Below we plot the PN (rows) to KC (columns) subgraphs under a permutation predicted
@@ -212,12 +235,12 @@ rows.append({"data": "Observed", "score": score, "alignment": alignment})
 
 #%%
 
-diff = A - B_perm
+diff = A_sub - B_sub_perm
 fig, axs = plt.subplots(3, 1, figsize=(8, 8))
 
-matrixplot(B[:n_upns, n_upns:], cbar=False, ax=axs[0])
-matrixplot(A[:n_upns, n_upns:], cbar=False, ax=axs[1])
-matrixplot(diff[:n_upns, n_upns:], cbar=False, ax=axs[2])
+matrixplot(B_sub_perm, cbar=False, ax=axs[0])
+matrixplot(A_sub, cbar=False, ax=axs[1])
+matrixplot(diff, cbar=False, ax=axs[2])
 
 # axs[0].set_title("KCs (graph matched)")
 axs[0].set_ylabel("Left", rotation=0, ha="right")
@@ -237,69 +260,32 @@ gluefig("matched_subgraphs", fig)
 
 # %%
 
-
-def get_subgraph(A):
-    return A[:n_upns, n_upns:]
-
-
-def make_subgraph(A):
-    A = A.copy()
-    # all KC to upn
-    A[n_upns:] = 0
-    # all PN to PN
-    A[:n_upns, :n_upns] = 0
-    return A
+n_sims = 1000
+glue("n_sims", n_sims)
 
 
 def er_subgraph(size, p, rng=None):
     subgraph = rng.binomial(1, p, size=size)
-    n = size[0] + size[1]
-    A = np.zeros((n, n))
-    A[:n_upns, n_upns:] = subgraph
-    return A
+    return subgraph
 
 
-from scipy.optimize import linear_sum_assignment
+p_A = np.count_nonzero(A_sub) / A_sub.size
+p_B = np.count_nonzero(B_sub) / B_sub.size
 
-
-def match_seeded_subgraphs(A, B):
-    assert A.shape[0] == B.shape[0]
-    assert A.shape[1] <= B.shape[1]
-    product = A.T @ B
-    row_inds, col_inds = linear_sum_assignment(product, maximize=True)
-    assert row_inds == np.arange(A.shape[0])
-    return col_inds
-
-
-A_sub_adj = get_subgraph(A)
-B_sub_adj = get_subgraph(B)
-
-p_A = np.count_nonzero(A_sub_adj) / A_sub_adj.size
-p_B = np.count_nonzero(B_sub_adj) / B_sub_adj.size
-n = A_sub_adj.shape[1]
-
-n_sims = 1000
-glue("n_sims", n_sims)
-
+rows = []
 for sim in tqdm(range(n_sims), leave=False):
-    A_sim = er_subgraph(A_sub_adj.shape, p_A, rng)
-    B_sim = er_subgraph(A_sub_adj.shape, p_B, rng)
+    A_sim = er_subgraph(A_sub.shape, p_A, rng)
+    B_sim = er_subgraph(B_sub.shape, p_B, rng)
 
-    gm = GraphMatch(n_init=n_init)
-    gm.fit(A_sim, B_sim, seeds_A=np.arange(n_upns), seeds_B=np.arange(n_upns))
-    perm_inds = gm.perm_inds_
-    score, B_sim_perm = obj_func(A_sim, B_sim, perm_inds)
-    alignment = compute_alignment_strength(A_sim, B_sim_perm)
+    perm_inds, B_sim_perm = match_seeded_subgraphs(A_sim, B_sim)
 
-    rows.append({"data": "ER", "score": score, "alignment": alignment})
+    alignment = compute_alignment_strength_subgraph(A_sim, B_sim_perm)
+
+    rows.append({"data": "ER", "alignment": alignment})
+
+rows.append({"data": "Observed", "alignment": observed_alignment})
 
 results = pd.DataFrame(rows)
-
-#%%
-observed_alignment = results[results["data"] == "Observed"].iloc[0]["alignment"]
-prop_less_than = (
-    results[results["data"] == "ER"]["alignment"].values < observed_alignment
-).mean()
 
 #%%
 
@@ -318,7 +304,7 @@ gluefig("alignment_dist", fig)
 # graph matching problem?
 #
 # Here, we have a special case since in addition to being bipartite,
-# we have a fixed matching (i.e. seeds) for one of the "parts." Thus, I believe graph
+# we have a fixed matching (i.e. seeds) for one of the "parts." Thus, graph
 # matching in this case reduces to solving a linear assignment problem to do
 #
 # $$
@@ -338,6 +324,53 @@ gluefig("alignment_dist", fig)
 #   But in our case, that subgraph is empty.
 # ```
 #
+
+#%%
+# Seeded, bipartite alignment strength.
+
+
+n = 20
+p = 0.23
+n_sims = 1_000
+rows = []
+for rho in [0.3, 0.8]:
+    for permute in [True, False]:
+        for i in tqdm(range(n_sims), leave=False):
+            A1, B1 = er_corr(n, p, rho, loops=False, directed=True)
+            A2, B2 = er_corr(n, p, rho, loops=False, directed=True)
+            A3, B3 = er_corr(n, p, rho, loops=False, directed=True)
+            A = np.hstack((A1, A2, A3))
+            B = np.hstack((B1, B2, B3))
+            if permute:
+                permutation = np.random.permutation(B.shape[1])
+                B = B[:, permutation]
+            alignment = compute_alignment_strength_subgraph(A, B)
+            rows.append({"permute": permute, "alignment": alignment, "rho": rho})
+
+results = pd.DataFrame(rows)
+
+#%% [markdown]
+# ## Appendix
+# ### Testing alignment strength
+#%%
+
+fg = sns.FacetGrid(data=results, row="rho", col="permute", height=4, aspect=1.5)
+fg.map(sns.kdeplot, "alignment", fill=True)
+
+
+def meanline(x, *args, **kwargs):
+    ax = plt.gca()
+    ax.axvline(x.mean(), color="tab:blue")
+    ax.spines["left"].set_visible(False)
+    ax.set(ylabel="", yticks=[])
+
+
+fg.map(meanline, "alignment")
+fg.axes[0, 0].axvline(0.3, color="tab:orange")
+fg.axes[0, 1].axvline(0.0, color="tab:orange")
+fg.axes[1, 0].axvline(0.8, color="tab:orange")
+fg.axes[1, 1].axvline(0.0, color="tab:orange")
+
 #%% [markdown]
 # ## End
 #%%
@@ -345,66 +378,3 @@ elapsed = time.time() - t0
 delta = datetime.timedelta(seconds=elapsed)
 print(f"Script took {delta}")
 print(f"Completed at {datetime.datetime.now()}")
-
-#%%
-# Seeded, bipartite alignment strength.
-
-from graspologic.simulations import er_corr
-
-
-def compute_density(adjacency):
-    n_edges = np.count_nonzero(adjacency)
-    n_possible = adjacency.size
-    return n_edges / n_possible
-
-
-def compute_alignment_strength(A, B, perm=None):
-    n_possible = A.size
-    if perm is not None:
-        B_perm = B[perm][:, perm]
-    else:
-        B_perm = B
-    n_disagreements = np.count_nonzero(A - B_perm)  # TODO this assumes loopless
-    p_disagreements = n_disagreements / n_possible
-    densityA = compute_density(A)
-    densityB = compute_density(B)
-    denominator = densityA * (1 - densityB) + densityB * (1 - densityA)
-    alignment_strength = 1 - p_disagreements / denominator
-    return alignment_strength
-
-
-n = 30
-p = 0.3
-n_sims = 10_000
-rows = []
-for rho in [0.3, 0.8]:
-    for permute in [True, False]:
-        for i in tqdm(range(n_sims), leave=False):
-            A1, B1 = er_corr(n, p, rho, loops=False, directed=True)
-            A2, B2 = er_corr(n, p, rho, loops=False, directed=True)
-            A = np.hstack((A1, A2))
-            B = np.hstack((B1, B2))
-            if permute:
-                permutation = np.random.permutation(B.shape[1])
-                B = B[:, permutation]
-            alignment = compute_alignment_strength(A, B)
-            rows.append({"permute": permute, "alignment": alignment, "rho": rho})
-
-results = pd.DataFrame(rows)
-
-#%%
-import seaborn as sns
-
-
-fg = sns.FacetGrid(data=results, row="rho", col="permute", height=4, aspect=1.5)
-fg.map(sns.histplot, "alignment")
-
-
-def meanline(x, *args, **kwargs):
-    ax = plt.gca()
-    ax.axvline(x.mean(), color="darkred")
-    ax.spines["left"].set_visible(False)
-    ax.set(ylabel="", yticks=[])
-
-
-fg.map(meanline, "alignment")
