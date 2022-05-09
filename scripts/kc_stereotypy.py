@@ -3,8 +3,8 @@
 # Here we investigate whether the connections from projection neurons (PNs) to Kenyon
 # cells (KCs) have a "stereotyped" structure. By stereotyped, we mean whether there is
 # correlation in the edge structure between multiple samples of this subgraph. Here,
-# we compare the left and right subgraphs for a single larval connectome (Eichler et al.
-# Nature 2017).
+# we compare the left and right subgraphs for a single larval *Drosophila* connectome
+# ([Eichler et al. Nature 2017](https://www.nature.com/articles/nature23455)).
 #%%
 
 import datetime
@@ -57,12 +57,15 @@ right_mg = mg.node_subgraph(mg[mg.nodes["right"]].nodes.index)
 
 #%% [markdown]
 # ## Data
-# For this investigation, we select the uniglomerular PNs and their
-# connections to the multi-claw KCs, as these are the specific projections
-# which are thought to be "unstructured" in their connectivity.
+# For this investigation, we select the subgraphs of connections from uniglomerular PNs
+# to the multi-claw KCs, as these are the specific projections which are thought to be 
+# "unstructured" in their connectivity.
 #
 # We also remove any KCs which do not recieve a projection from one of these
 # PNs.
+#
+# For this analysis, I will consider the subgraphs to be directed and unweighted (though
+# I discuss the importance of weights going forward at the end).
 
 #%%
 nodes = left_mg.nodes
@@ -104,6 +107,8 @@ right_adj = binarize(right_subgraph_mg.sum.adj)
 right_adj, right_index = remove_unconnected_kcs(right_adj, right_index, n_upns)
 right_labels = np.array(n_upns * ["uPN"] + (len(right_adj) - n_upns) * ["KC"])
 
+#%% [markdown]
+# After filtering the data in this way, we have the following numbers of nodes: 
 #%%
 print("Number of uPNs (L vs. R):")
 print((left_labels == "uPN").sum())
@@ -150,37 +155,6 @@ gluefig("left_right_adjs", fig)
 #%%
 
 
-# def compute_density(adjacency, loops=False):
-#     if not loops:
-#         triu_inds = np.triu_indices_from(adjacency, k=1)
-#         tril_inds = np.tril_indices_from(adjacency, k=-1)
-#         n_edges = np.count_nonzero(adjacency[triu_inds]) + np.count_nonzero(
-#             adjacency[tril_inds]
-#         )
-#     else:
-#         n_edges = np.count_nonzero(adjacency)
-#     n_nodes = adjacency.shape[0]
-#     n_possible = n_nodes**2
-#     if not loops:
-#         n_possible -= n_nodes
-#     return n_edges / n_possible
-
-
-# def compute_alignment_strength(A, B, perm=None):
-#     n = A.shape[0]
-#     if perm is not None:
-#         B_perm = B[perm][:, perm]
-#     else:
-#         B_perm = B
-#     n_disagreements = np.count_nonzero(A - B_perm)  # TODO this assumes loopless
-#     p_disagreements = n_disagreements / (n**2 - n)
-#     densityA = compute_density(A)
-#     densityB = compute_density(B)
-#     denominator = densityA * (1 - densityB) + densityB * (1 - densityA)
-#     alignment_strength = 1 - p_disagreements / denominator
-#     return alignment_strength
-
-
 def get_subgraph(A):
     return A[:n_upns, n_upns:]
 
@@ -223,8 +197,6 @@ B_sub = get_subgraph(left_adj)
 
 perm_inds, B_sub_perm = match_seeded_subgraphs(A_sub, B_sub)
 
-observed_alignment = compute_alignment_strength_subgraph(A_sub, B_sub_perm)
-
 
 #%% [markdown]
 # Below we plot the PN (rows) to KC (columns) subgraphs under a permutation predicted
@@ -251,12 +223,33 @@ fig.set_facecolor("w")
 
 gluefig("matched_subgraphs", fig)
 
+
 #%% [markdown]
 # We also compute a metric to measure the degree of overlap between the matched
-# subgraphs.
+# subgraphs. This metric is called alignment strength, defined in 
+# [Fishkind et al. 2021](https://link.springer.com/article/10.1007/s41109-021-00398-z).
+# it measures the amount of edge disagreements relative to what one would expect by
+# chance under a *random* matching.
+
+#%%
+observed_alignment = compute_alignment_strength_subgraph(A_sub, B_sub_perm)
+
+glue('observed_alignment', observed_alignment)
+
+#%% [markdown]
+# We find that for the optimized matching, the alignment strength is 
+# {glue:text}`kc_stereotypy-observed_alignment:.2f`. But what should we make of this? 
+# Two random subgraphs would also have some degree of alignment between their edges
+# under an optimized matching. 
 
 #%% [markdown]
 # ## Comparing our edge disagreements to a null model
+#
+# To calibrate our expectations for the alignment strength, we compute the alignment
+# strength for a series of network pairs sampled from a null model. In other words, we 
+# sample two networks *which share no edge correlation*, match them, and compute the 
+# alignment strength. This gives us a distribution of alignment strengths to compare 
+# to.
 
 # %%
 
@@ -300,34 +293,53 @@ gluefig("alignment_dist", fig)
 # ## Questions/thoughts
 # ```{admonition} Question
 # :class: tip
-# Should I be doing anything special for the matching since this is a bipartite seeded
-# graph matching problem?
-#
-# Here, we have a special case since in addition to being bipartite,
-# we have a fixed matching (i.e. seeds) for one of the "parts." Thus, graph
-# matching in this case reduces to solving a linear assignment problem to do
+# **Am I matching correctly for a pair of bipartite networks where one "part" is 
+# completely seeded?**
+# 
+# In this case, the graph matching minimization problem reduces to to solving a linear
+# assignment problem to do
 #
 # $$
 # \min_P tr(P^T A_{12}^T B_{12})
 # $$
 #
 # where $A_{12}$ is the subgraph of connections from seeded (PN) to nonseeded (KC) on
-# one hemisphere, and $B_{12}$ is defined likewise for the other hemisphere.
+# one hemisphere, and $B_{12}$ is defined likewise for the other hemisphere. This is 
+# because $A_{11}, A_{21}$ and $A_{22}$ (and likewise for $B$) are all 0 due to how 
+# we've defined our subgraphs.
+# 
 # ```
 #
 # ```{admonition} Question
 # :class: tip
-# How exactly should I compute alignment strength here? There are a couple of weirdnesses:
+# **How exactly should I compute alignment strength here?** 
+# There are a couple of weirdnesses:
 # - we have bipartite networks,
 # - In the phantom alignment strength paper, it is suggested (I think) to only look at
 #   the restricted alignment strength which considers the unseeded-to-unseeded subgraph.
 #   But in our case, that subgraph is empty.
 # ```
+# 
+# ```{admonition} Question
+# :class: tip 
+# **How to deal with weights for the null model?**
+# ```
 #
+# ```{admonition} Question
+# :class: tip 
+# **How to deal with weights for the alignment strength test statistic?**
+# ```
+#
+# ```{admonition} Question
+# :class: tip
+# **How to deal with an unequal number of Kenyon cells?**
+# ```
 
+#%% [markdown]
+# ## Appendix
+# ### Testing alignment strength implementation
 #%%
 # Seeded, bipartite alignment strength.
-
 
 n = 20
 p = 0.23
@@ -349,9 +361,6 @@ for rho in [0.3, 0.8]:
 
 results = pd.DataFrame(rows)
 
-#%% [markdown]
-# ## Appendix
-# ### Testing alignment strength
 #%%
 
 fg = sns.FacetGrid(data=results, row="rho", col="permute", height=4, aspect=1.5)
@@ -369,7 +378,7 @@ fg.map(meanline, "alignment")
 fg.axes[0, 0].axvline(0.3, color="tab:orange")
 fg.axes[0, 1].axvline(0.0, color="tab:orange")
 fg.axes[1, 0].axvline(0.8, color="tab:orange")
-fg.axes[1, 1].axvline(0.0, color="tab:orange")
+_ = fg.axes[1, 1].axvline(0.0, color="tab:orange")
 
 #%% [markdown]
 # ## End
