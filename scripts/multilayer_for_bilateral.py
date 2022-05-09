@@ -13,7 +13,7 @@ from graspologic.simulations import er_corr
 from pkg.io import FIG_PATH, OUT_PATH
 from pkg.io import glue as default_glue
 from pkg.io import savefig
-from pkg.match import GraphMatchSolver
+from giskard.match import GraphMatchSolver
 from pkg.plot import set_theme
 from tqdm import tqdm
 
@@ -59,7 +59,7 @@ contra_p = 0.2
 glue("contra_p", contra_p)
 
 #%% [markdown]
-# - Let the correlated Erdos-Reyni model be written as $CorrER(n, p, \rho)$, where $n$ is
+# - Let the directed, correlated Erdos-Reyni model be written as $CorrER(n, p, \rho)$, where $n$ is
 #   the number of nodes, $p$ is the density, and $\rho$ is the correlation between the
 #   two networks.
 # - The ipsilateral subgraphs were sampled from a $CorrER$ model:
