@@ -4,7 +4,30 @@
 # cells (KCs) have a "stereotyped" structure. By stereotyped, we mean whether there is
 # correlation in the edge structure between multiple samples of this subgraph. Here,
 # we compare the left and right subgraphs for a single larval *Drosophila* connectome
-# ([Eichler et al. Nature 2017](https://www.nature.com/articles/nature23455)).
+# ([Eichler et al. (2017)](https://www.nature.com/articles/nature23455)).
+#
+# ## Introduction
+# The general thinking in the field is that the connections from PNs to KCs are "random"
+# (though there are are some caveats and debates, see
+# [Zheng et al. (2020)](https://www.biorxiv.org/content/10.1101/2020.04.17.047167v2.abstract)).
+# The word "random" is doing a lot of work here, and I don't think the field would agree
+# to a distribution on that subgraph-as-a-random-variable that would satisfy us. The
+# general idea is that the PNs are stereotyped and identifiable across animals: I can
+# find the same one on each hemisphere of the brain, and across animals. Conversely, the
+# KCs are not, because there is not thought to be correlation between the edges projecting
+# from PNs to KCs. See the figure below for a schematic.
+
+#%% [markdown]
+# ```{figure} ./images/mittal-fig-2a.png
+# ---
+# width: 500px
+# name: mb-schematic
+# ---
+# Schematic description of the mushroom body (here shown for the adult *Drosophila*,
+# the larva has far fewer neurons). Connections from projection neurons (PNs) to
+# Kenyon cells are thought to be random. Image from
+# [Mittal et al. (2020)](https://www.nature.com/articles/s41467-020-14836-6).
+# ```
 #%%
 
 import datetime
@@ -58,7 +81,7 @@ right_mg = mg.node_subgraph(mg[mg.nodes["right"]].nodes.index)
 #%% [markdown]
 # ## Data
 # For this investigation, we select the subgraphs of connections from uniglomerular PNs
-# to the multi-claw KCs, as these are the specific projections which are thought to be 
+# to the multi-claw KCs, as these are the specific projections which are thought to be
 # "unstructured" in their connectivity.
 #
 # We also remove any KCs which do not recieve a projection from one of these
@@ -108,7 +131,7 @@ right_adj, right_index = remove_unconnected_kcs(right_adj, right_index, n_upns)
 right_labels = np.array(n_upns * ["uPN"] + (len(right_adj) - n_upns) * ["KC"])
 
 #%% [markdown]
-# After filtering the data in this way, we have the following numbers of nodes: 
+# After filtering the data in this way, we have the following numbers of nodes:
 #%%
 print("Number of uPNs (L vs. R):")
 print((left_labels == "uPN").sum())
@@ -226,29 +249,29 @@ gluefig("matched_subgraphs", fig)
 
 #%% [markdown]
 # We also compute a metric to measure the degree of overlap between the matched
-# subgraphs. This metric is called alignment strength, defined in 
-# [Fishkind et al. 2021](https://link.springer.com/article/10.1007/s41109-021-00398-z).
+# subgraphs. This metric is called alignment strength, defined in
+# [Fishkind et al. (2021)](https://link.springer.com/article/10.1007/s41109-021-00398-z).
 # it measures the amount of edge disagreements relative to what one would expect by
 # chance under a *random* matching.
 
 #%%
 observed_alignment = compute_alignment_strength_subgraph(A_sub, B_sub_perm)
 
-glue('observed_alignment', observed_alignment)
+glue("observed_alignment", observed_alignment)
 
 #%% [markdown]
-# We find that for the optimized matching, the alignment strength is 
-# {glue:text}`kc_stereotypy-observed_alignment:.2f`. But what should we make of this? 
+# We find that for the optimized matching, the alignment strength is
+# {glue:text}`kc_stereotypy-observed_alignment:.2f`. But what should we make of this?
 # Two random subgraphs would also have some degree of alignment between their edges
-# under an optimized matching. 
+# under an optimized matching.
 
 #%% [markdown]
 # ## Comparing our edge disagreements to a null model
 #
 # To calibrate our expectations for the alignment strength, we compute the alignment
-# strength for a series of network pairs sampled from a null model. In other words, we 
-# sample two networks *which share no edge correlation*, match them, and compute the 
-# alignment strength. This gives us a distribution of alignment strengths to compare 
+# strength for a series of network pairs sampled from a null model. In other words, we
+# sample two networks *which share no edge correlation*, match them, and compute the
+# alignment strength. This gives us a distribution of alignment strengths to compare
 # to.
 
 # %%
@@ -291,11 +314,11 @@ gluefig("alignment_dist", fig)
 
 #%% [markdown]
 # ## Questions/thoughts
-# ```{admonition} Question
-# :class: tip
-# **Am I matching correctly for a pair of bipartite networks where one "part" is 
-# completely seeded?**
-# 
+# ```{admonition} Note
+# :class: note
+# **I am using the "restricted-focus seeded graph matching" since I have a pair of bipartite networks where one "part" is
+# completely seeded**
+#
 # In this case, the graph matching minimization problem reduces to to solving a linear
 # assignment problem to do
 #
@@ -304,29 +327,29 @@ gluefig("alignment_dist", fig)
 # $$
 #
 # where $A_{12}$ is the subgraph of connections from seeded (PN) to nonseeded (KC) on
-# one hemisphere, and $B_{12}$ is defined likewise for the other hemisphere. This is 
-# because $A_{11}, A_{21}$ and $A_{22}$ (and likewise for $B$) are all 0 due to how 
+# one hemisphere, and $B_{12}$ is defined likewise for the other hemisphere. This is
+# because $A_{11}, A_{21}$ and $A_{22}$ (and likewise for $B$) are all 0 due to how
 # we've defined our subgraphs.
-# 
+#
 # ```
 #
 # ```{admonition} Question
 # :class: tip
-# **How exactly should I compute alignment strength here?** 
+# **How exactly should I compute alignment strength here?**
 # There are a couple of weirdnesses:
 # - we have bipartite networks,
 # - In the phantom alignment strength paper, it is suggested (I think) to only look at
 #   the restricted alignment strength which considers the unseeded-to-unseeded subgraph.
 #   But in our case, that subgraph is empty.
 # ```
-# 
+#
 # ```{admonition} Question
-# :class: tip 
+# :class: tip
 # **How to deal with weights for the null model?**
 # ```
 #
 # ```{admonition} Question
-# :class: tip 
+# :class: tip
 # **How to deal with weights for the alignment strength test statistic?**
 # ```
 #
