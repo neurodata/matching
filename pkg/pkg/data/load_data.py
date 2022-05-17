@@ -185,3 +185,12 @@ def load_data(graph_type, base_path=None, version=None):
         graph.add_node(node)
 
     return Bunch(graph=graph, adj=adj, meta=meta)
+
+
+def load_andre_subgraph(name):
+    path = DATA_PATH / "andre"
+    path = path / (name + ".csv")
+    csv = pd.read_csv(path, index_col=0)
+    csv.index.name = "PN"
+    csv.columns.name = "KC"
+    return csv

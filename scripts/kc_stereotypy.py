@@ -359,6 +359,134 @@ gluefig("alignment_dist", fig)
 # ```
 
 #%% [markdown]
+# ## Weighted
+#%%
+
+from pkg.data import load_andre_subgraph
+
+left_sub_df = load_andre_subgraph("left_mb_odorant")
+print((left_sub_df.shape))
+
+right_sub_df = load_andre_subgraph("right_mb_odorant")
+print((right_sub_df.shape))
+
+np.setxor1d(left_sub_df.index.values, right_sub_df.index.values)
+
+right_sub_df = right_sub_df.iloc[:21]
+
+right_sub_df = right_sub_df.reindex(left_sub_df.index)
+
+
+#%%
+
+A_sub = left_sub_df.values
+B_sub = right_sub_df.values
+
+A_pn_strength = np.sum(A_sub, axis=1)
+B_pn_strength = np.sum(B_sub, axis=1)
+
+A_node_data = pd.DataFrame(
+    data=A_pn_strength, columns=["strength"], index=left_sub_df.index
+).reset_index()
+A_node_data["side"] = "Left"
+
+B_node_data = pd.DataFrame(
+    data=B_pn_strength, columns=["strength"], index=right_sub_df.index
+).reset_index()
+B_node_data["side"] = "Right"
+
+node_data = pd.concat((A_node_data, B_node_data))
+sort_index = node_data.groupby("PN")["strength"].mean().sort_values().index[::-1]
+
+fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+sns.barplot(data=node_data, x="PN", y="strength", hue="side", ax=ax, order=sort_index)
+sns.move_legend(
+    ax, loc="upper right", bbox_to_anchor=(1, 1), frameon=True, title="Side"
+)
+ax.set_ylabel("Node strength")
+
+fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+sns.scatterplot(
+    data=node_data.pivot(index="PN", values="strength", columns="side"),
+    x="Left",
+    y="Right",
+    ax=ax,
+)
+
+#%%
+perm, B_sub_perm = match_seeded_subgraphs(A_sub, B_sub)
+# B_sub_perm = B_sub[:, :A_sub.shape[1]]
+ord = 2
+stat_observed = np.linalg.norm(A_sub - B_sub_perm, ord=ord)
+
+#%%
+
+
+def plot_alignment(left, right, figsize=(8, 8)):
+    diff = left - right
+    fig, axs = plt.subplots(3, 1, figsize=figsize)
+
+    matrixplot(left, cbar=False, ax=axs[0])
+    matrixplot(right, cbar=False, ax=axs[1])
+    matrixplot(diff, cbar=False, ax=axs[2])
+
+    axs[0].set_ylabel("Left", rotation=0, ha="right")
+    axs[1].set_ylabel("Right", rotation=0, ha="right")
+    axs[2].set_ylabel("L - R", rotation=0, ha="right")
+
+    fig.set_facecolor("w")
+
+    return fig, axs
+
+
+plot_alignment(A_sub, B_sub_perm)
+
+gluefig("matched_subgraphs_weighted", fig)
+
+#%%
+
+weights_A = A_sub[np.nonzero(A_sub)]
+weights_B = B_sub[np.nonzero(B_sub)]
+p_A = compute_density_subgraph(A_sub)
+p_B = compute_density_subgraph(B_sub)
+
+
+def weighted_er_subgraph(size, p, weights, replace=True, rng=None):
+    subgraph = er_subgraph(size, p, rng)
+    row_inds, col_inds = np.nonzero(subgraph)
+    n_edges = len(row_inds)
+    sampled_weights = rng.choice(weights, size=n_edges, replace=replace)
+    subgraph[row_inds, col_inds] = sampled_weights
+    return subgraph
+
+
+#%%
+
+rows = []
+for i in range(n_sims):
+    A_sim = weighted_er_subgraph(A_sub.shape, p_A, weights_A, replace=True, rng=rng)
+    B_sim = weighted_er_subgraph(B_sub.shape, p_B, weights_B, replace=True, rng=rng)
+    perm, B_sim_perm = match_seeded_subgraphs(A_sim, B_sim)
+
+    stat = np.linalg.norm(A_sim - B_sim_perm, ord=ord)
+    rows.append({"data": "Random", "stat": stat})
+
+rows.append({"data": "Observed", "stat": stat_observed})
+results = pd.DataFrame(rows)
+
+#%%
+
+plot_alignment(A_sim, B_sim_perm)
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+histplot(data=results, x="stat", hue="data", kde=True, ax=ax)
+ax.set(ylabel="", yticks=[], xlabel="Difference norm")
+ax.spines["left"].set_visible(False)
+
+gluefig("alignment_dist_weighted", fig)
+
+#%% [markdown]
 # ## Appendix
 # ### Testing alignment strength implementation
 #%%
