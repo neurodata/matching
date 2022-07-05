@@ -45,17 +45,6 @@ t0 = time.time()
 set_theme()
 rng = np.random.default_rng(8888)
 
-#%%
-from sklearn.utils import check_scalar
-
-out = check_scalar(
-    0.0,
-    name="init_perturbation",
-    target_type=(float, int),
-    min_val=0,
-    max_val=1,
-)
-out
 
 #%%
 
@@ -88,13 +77,85 @@ B = [
     [95, 36, 63, 85, 76, 34, 37, 80, 33, 86, 18, 0],
 ]
 A, B = np.array(A), np.array(B)
-
 n = A.shape[0]
 pi = np.array([7, 5, 1, 3, 10, 4, 8, 6, 9, 11, 2, 12]) - [1] * n
+
+#%%
+_, _, score, _ = graph_match(
+    A, B, n_init=50, maximize=False, init_perturbation=0.5, rng=888
+)
+score
+
+#%%
+from graspologic.simulations import er_np
+np.random.seed(888)
+n = 50
+p = 0.4
+
+A = er_np(n=n, p=p)
+B = A[:-2, :-2]  # remove two nodes
+
+indices_A, indices_B, _, _ = graph_match(A, B, rng=888, padding="adopted")
+np.array_equal(indices_A, np.arange(n-2))
+#%%
+gm = GraphMatch(init="rand", gmp=False)
+gm.fit_predict(A, B)
+gm.score_
+
+#%%
+
+seeds1 = np.array(range(n))
+seeds2 = pi
+partial_match = np.column_stack((seeds1, seeds2))
+_, indices_B, score, _ = graph_match(A, B, partial_match=partial_match, maximize=False)
+np.testing.assert_array_equal(indices_B, pi)
+score
+#%%
+
+
+#%%
 seeds1 = [4, 8, 10]
 seeds2 = [pi[z] for z in seeds1]
 partial_match = np.column_stack((seeds1, seeds2))
-_, _, score, _ = graph_match(A, B, partial_match=partial_match)
+indices_A, indices_B, score, misc_df = graph_match(
+    A,
+    B,
+    partial_match=partial_match,
+    maximize=False,
+    n_init=1,
+    init_perturbation=0,
+    shuffle_input=False,
+)
+# print(indices_A)
+
+print(pi)
+print()
+print(indices_B)
+print((indices_B == pi).mean())
+print(score)
+raw_score = np.sum(A * B[indices_B][:, indices_B])
+print(raw_score)
+
+from graspologic.match import GraphMatch
+
+gm = GraphMatch(gmp=False, shuffle_input=False)
+pred_inds = gm.fit_predict(A, B, seeds1, seeds2)
+
+print()
+print(pred_inds)
+print((pred_inds == pi).mean())
+print(gm.score_)
+
+#%%
+gm.score_ * 2 + np.linalg.norm(A) ** 2 + np.linalg.norm(B) ** 2
+
+#%%
+
+(
+    2 * np.linalg.norm(A - B[indices_B][:, indices_B]) ** 2
+    - np.linalg.norm(A) ** 2
+    - np.linalg.norm(B) ** 2
+)
 
 #%%
 n_side = 10

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspologic.match import GraphMatchSolver  # experimental version
+from graspologic.match import graph_match  # experimental version
 from graspologic.match import GraphMatch
 from graspologic.simulations import er_corr
 from pkg.io import FIG_PATH, OUT_PATH
@@ -96,15 +96,11 @@ with tqdm(total=len(seeds_range) * len(lamb_range) * n_sims) as pbar:
                 S = np.random.uniform(0, 1, (n_side, n_side)) + S
                 S = S[:, perm]
 
-                solver = GraphMatchSolver(
-                    A,
-                    B,
-                    S=S,
-                    partial_match=partial_match,
-                    use_numba=False,
+                indices_A, indices_B, score, misc = graph_match(
+                    A, B, S=S, partial_match=partial_match, use_numba=False
                 )
-                solver.solve()
-                match_ratio = (solver.permutation_ == undo_perm).mean()
+
+                match_ratio = (indices_B == undo_perm).mean()
                 rows.append(
                     {
                         "n_seeds": n_seeds,
