@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspologic.match import GraphMatchSolver  # experimental version
+from graspologic.match import _GraphMatchSolver  # experimental version
 from graspologic.match import GraphMatch
 from graspologic.match import graph_match
 from graspologic.simulations import er_corr
@@ -88,6 +88,7 @@ score
 
 #%%
 from graspologic.simulations import er_np
+
 np.random.seed(888)
 n = 50
 p = 0.4
@@ -96,7 +97,7 @@ A = er_np(n=n, p=p)
 B = A[:-2, :-2]  # remove two nodes
 
 indices_A, indices_B, _, _ = graph_match(A, B, rng=888, padding="adopted")
-np.array_equal(indices_A, np.arange(n-2))
+np.array_equal(indices_A, np.arange(n - 2))
 #%%
 gm = GraphMatch(init="rand", gmp=False)
 gm.fit_predict(A, B)

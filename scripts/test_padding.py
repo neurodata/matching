@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from graspologic.match import GraphMatchSolver  # experimental version
+from graspologic.match import _GraphMatchSolver  # experimental version
 from graspologic.match import GraphMatch
 from graspologic.simulations import er_corr
 from pkg.io import FIG_PATH, OUT_PATH
@@ -61,7 +61,7 @@ glue("contra_p", contra_p)
 
 A = np.zeros((5, 5))
 B = np.zeros((4, 4))
-solver = GraphMatchSolver(A, B, use_numba=False)
+solver = _GraphMatchSolver(A, B, use_numba=False)
 solver.solve()
 
 
@@ -87,7 +87,7 @@ with tqdm(total=len(extras) * 2 * n_sims) as pbar:
                 undo_perm = np.argsort(perm)
                 B_big = B_big[perm][:, perm]
 
-                solver = GraphMatchSolver(A, B_big, use_numba=False, padding=padding)
+                solver = _GraphMatchSolver(A, B_big, use_numba=False, padding=padding)
                 solver.solve()
                 matching = solver.matching_
                 acc = (undo_perm[matching[:, 0]] == matching[:, 1]).mean()

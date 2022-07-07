@@ -91,6 +91,7 @@ with tqdm(total=len(seeds_range) * len(lamb_range) * n_sims) as pbar:
                 else:
                     seeds_A = seeds_B = []
                     partial_match = None
+                non_seeds_A = np.setdiff1d(np.arange(n_side), seeds_A)
 
                 S = lamb * np.eye(B.shape[0])
                 S = np.random.uniform(0, 1, (n_side, n_side)) + S
@@ -100,11 +101,16 @@ with tqdm(total=len(seeds_range) * len(lamb_range) * n_sims) as pbar:
                     A, B, S=S, partial_match=partial_match, use_numba=False
                 )
 
-                match_ratio = (indices_B == undo_perm).mean()
+                match_ratio_full = (indices_B == undo_perm).mean()
+                match_ratio_nonseed = (
+                    indices_B[non_seeds_A] == undo_perm[non_seeds_A]
+                ).mean()
+
                 rows.append(
                     {
                         "n_seeds": n_seeds,
-                        "match_ratio": match_ratio,
+                        "match_ratio_full": match_ratio_full,
+                        "match_ratio_nonseed": match_ratio_nonseed,
                         "method": "new",
                         "lambda": lamb,
                     }
@@ -113,11 +119,15 @@ with tqdm(total=len(seeds_range) * len(lamb_range) * n_sims) as pbar:
                 fit_perm = GraphMatch().fit_predict(
                     A, B, S=S, seeds_A=seeds_A, seeds_B=seeds_B
                 )
-                match_ratio = (fit_perm == undo_perm).mean()
+                match_ratio_full = (fit_perm == undo_perm).mean()
+                match_ratio_nonseed = (
+                    fit_perm[non_seeds_A] == undo_perm[non_seeds_A]
+                ).mean()
                 rows.append(
                     {
                         "n_seeds": n_seeds,
-                        "match_ratio": match_ratio,
+                        "match_ratio_full": match_ratio_full,
+                        "match_ratio_nonseed": match_ratio_nonseed,
                         "method": "old",
                         "lambda": lamb,
                     }
@@ -130,15 +140,17 @@ results = pd.DataFrame(rows)
 
 from scipy.stats import wilcoxon
 
+key = "match_ratio_nonseed"
+
 
 def compute_wilcoxon_pvalue(sub_results, ax):
     for i, n_seeds in enumerate(seeds_range):
         sub_sub_results = sub_results[sub_results["n_seeds"] == n_seeds]
         old_match_ratios = sub_sub_results[sub_sub_results["method"] == "old"][
-            "match_ratio"
+            key
         ].values
         new_match_ratios = sub_sub_results[sub_sub_results["method"] == "new"][
-            "match_ratio"
+            key
         ].values
         if (old_match_ratios - new_match_ratios).max() == 0:
             pvalue = 1
@@ -156,7 +168,7 @@ for i, lamb in enumerate(lamb_range):
     sns.lineplot(
         data=sub_results,
         x="n_seeds",
-        y="match_ratio",
+        y=key,
         hue="method",
         ax=ax,
         legend=i == 0,
@@ -164,6 +176,38 @@ for i, lamb in enumerate(lamb_range):
     ax.set(title=f"lambda = {lamb:.1f}")
     # compute_wilcoxon_pvalue(sub_results, ax)
     # ax.set(ylim=(ax.get_ylim()[0], 1.05))
+
+#%%
+
+rng = np.random.default_rng(888)
+np.random.seed(888)
+n = 10
+n_seeds = 1
+lamb = 0.8
+n_sims = 10
+total_match_ratio = 0.0
+for _ in range(n_sims):
+    A, B = er_corr(n, 0.3, 0.8, directed=True)
+    perm = rng.permutation(n)
+    undo_perm = np.argsort(perm)
+    B = B[perm][:, perm]
+
+    seeds_A = np.random.choice(n, replace=False, size=n_seeds)
+    seeds_B = np.argsort(perm)[seeds_A]
+    partial_match = np.stack((seeds_A, seeds_B)).T
+    non_seeds_A = np.setdiff1d(np.arange(n), seeds_A)
+
+    S = lamb * np.eye(B.shape[0])
+    S = np.random.uniform(0, 1, (n, n)) + S
+    S = S[:, perm]
+
+    indices_A, indices_B, score, misc = graph_match(
+        A, B, S=S, partial_match=partial_match, use_numba=False
+    )
+    total_match_ratio += (
+        indices_B[non_seeds_A] == undo_perm[non_seeds_A]
+    ).mean()
+total_match_ratio
 
 #%%
 from scipy.sparse import csr_array
