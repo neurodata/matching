@@ -9,6 +9,7 @@ parts:
     - file: benchmarks
   - caption: Results 
     chapters:
+    - file: spiny_match_simple
     - file: kc_stereotypy
     - file: multilayer_for_bilateral
   - caption: References
