@@ -390,6 +390,11 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#weighted">
+   Weighted
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#appendix">
    Appendix
   </a>
@@ -448,6 +453,11 @@ title="Print to PDF"
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#questions-thoughts">
    Questions/thoughts
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#weighted">
+   Weighted
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -517,7 +527,7 @@ Kenyon cells are thought to be random. Image from
 <span class="kn">from</span> <span class="nn">graspologic.plot</span> <span class="kn">import</span> <span class="n">heatmap</span>
 <span class="kn">from</span> <span class="nn">graspologic.simulations</span> <span class="kn">import</span> <span class="n">er_corr</span>
 <span class="kn">from</span> <span class="nn">graspologic.utils</span> <span class="kn">import</span> <span class="n">binarize</span>
-<span class="kn">from</span> <span class="nn">pkg.data</span> <span class="kn">import</span> <span class="n">load_maggot_graph</span><span class="p">,</span> <span class="n">load_unmatched</span>
+<span class="kn">from</span> <span class="nn">pkg.data</span> <span class="kn">import</span> <span class="n">load_maggot_graph</span><span class="p">,</span> <span class="n">load_unmatched</span><span class="p">,</span> <span class="n">DATA_PATH</span>
 <span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">glue</span> <span class="k">as</span> <span class="n">default_glue</span>
 <span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">savefig</span>
 <span class="kn">from</span> <span class="nn">pkg.plot</span> <span class="kn">import</span> <span class="n">set_theme</span>
@@ -546,8 +556,8 @@ Kenyon cells are thought to be random. Image from
 <span class="n">set_theme</span><span class="p">()</span>
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">8888</span><span class="p">)</span>
 
-<span class="n">left_adj</span><span class="p">,</span> <span class="n">left_nodes</span> <span class="o">=</span> <span class="n">load_unmatched</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
-<span class="n">right_adj</span><span class="p">,</span> <span class="n">right_nodes</span> <span class="o">=</span> <span class="n">load_unmatched</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+<span class="n">left_adj</span><span class="p">,</span> <span class="n">left_nodes</span> <span class="o">=</span> <span class="n">load_unmatched</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">right_adj</span><span class="p">,</span> <span class="n">right_nodes</span> <span class="o">=</span> <span class="n">load_unmatched</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="n">mg</span> <span class="o">=</span> <span class="n">load_maggot_graph</span><span class="p">()</span>
 
@@ -598,7 +608,7 @@ I discuss the importance of weights going forward at the end).</p>
 <span class="n">left_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">upns_left</span><span class="p">,</span> <span class="n">kcs_left</span><span class="p">))</span>
 <span class="n">left_mg</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">left_mg</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">left_index</span><span class="p">)</span>
 <span class="n">left_subgraph_mg</span> <span class="o">=</span> <span class="n">left_mg</span><span class="o">.</span><span class="n">node_subgraph</span><span class="p">(</span><span class="n">upns_left</span><span class="p">,</span> <span class="n">kcs_left</span><span class="p">)</span>
-<span class="n">left_adj</span> <span class="o">=</span> <span class="n">binarize</span><span class="p">(</span><span class="n">left_subgraph_mg</span><span class="o">.</span><span class="n">sum</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span>
+<span class="n">left_adj</span> <span class="o">=</span> <span class="n">left_subgraph_mg</span><span class="o">.</span><span class="n">sum</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
 <span class="n">left_adj</span><span class="p">,</span> <span class="n">left_index</span> <span class="o">=</span> <span class="n">remove_unconnected_kcs</span><span class="p">(</span><span class="n">left_adj</span><span class="p">,</span> <span class="n">left_index</span><span class="p">,</span> <span class="n">n_upns</span><span class="p">)</span>
 <span class="n">left_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n_upns</span> <span class="o">*</span> <span class="p">[</span><span class="s2">&quot;uPN&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">left_adj</span><span class="p">)</span> <span class="o">-</span> <span class="n">n_upns</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="s2">&quot;KC&quot;</span><span class="p">])</span>
@@ -606,7 +616,7 @@ I discuss the importance of weights going forward at the end).</p>
 <span class="n">right_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">upns_right</span><span class="p">,</span> <span class="n">kcs_right</span><span class="p">))</span>
 <span class="n">right_mg</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">right_mg</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">right_index</span><span class="p">)</span>
 <span class="n">right_subgraph_mg</span> <span class="o">=</span> <span class="n">right_mg</span><span class="o">.</span><span class="n">node_subgraph</span><span class="p">(</span><span class="n">upns_right</span><span class="p">,</span> <span class="n">kcs_right</span><span class="p">)</span>
-<span class="n">right_adj</span> <span class="o">=</span> <span class="n">binarize</span><span class="p">(</span><span class="n">right_subgraph_mg</span><span class="o">.</span><span class="n">sum</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span>
+<span class="n">right_adj</span> <span class="o">=</span> <span class="n">right_subgraph_mg</span><span class="o">.</span><span class="n">sum</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
 <span class="n">right_adj</span><span class="p">,</span> <span class="n">right_index</span> <span class="o">=</span> <span class="n">remove_unconnected_kcs</span><span class="p">(</span><span class="n">right_adj</span><span class="p">,</span> <span class="n">right_index</span><span class="p">,</span> <span class="n">n_upns</span><span class="p">)</span>
 <span class="n">right_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n_upns</span> <span class="o">*</span> <span class="p">[</span><span class="s2">&quot;uPN&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">right_adj</span><span class="p">)</span> <span class="o">-</span> <span class="n">n_upns</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="s2">&quot;KC&quot;</span><span class="p">])</span>
@@ -643,6 +653,29 @@ vs
 </div>
 </div>
 </div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">right_adj_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">right_adj</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">right_index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">right_index</span><span class="p">)</span>
+<span class="n">right_adj_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">DATA_PATH</span> <span class="o">/</span> <span class="s2">&quot;kc_processed_for_andre/right_adj.csv&quot;</span><span class="p">)</span>
+<span class="n">right_meta</span> <span class="o">=</span> <span class="n">right_mg</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">right_index</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;hemisphere&quot;</span><span class="p">,</span> <span class="s2">&quot;merge_class&quot;</span><span class="p">]]</span>
+<span class="n">right_meta</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">DATA_PATH</span> <span class="o">/</span> <span class="s2">&quot;kc_processed_for_andre/right_nodes.csv&quot;</span><span class="p">)</span>
+
+<span class="n">left_adj_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">left_adj</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">left_index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">left_index</span><span class="p">)</span>
+<span class="n">left_adj_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">DATA_PATH</span> <span class="o">/</span> <span class="s2">&quot;kc_processed_for_andre/left_adj.csv&quot;</span><span class="p">)</span>
+<span class="n">left_meta</span> <span class="o">=</span> <span class="n">left_mg</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">left_index</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;hemisphere&quot;</span><span class="p">,</span> <span class="s2">&quot;merge_class&quot;</span><span class="p">]]</span>
+<span class="n">left_meta</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">DATA_PATH</span> <span class="o">/</span> <span class="s2">&quot;kc_processed_for_andre/left_nodes.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">left_adj</span> <span class="o">=</span> <span class="n">binarize</span><span class="p">(</span><span class="n">left_adj</span><span class="p">)</span>
+<span class="n">right_adj</span> <span class="o">=</span> <span class="n">binarize</span><span class="p">(</span><span class="n">right_adj</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
 <p>Below we plot these subgraphs as adjacency matrices - note that there are a lot of
 0s because of how we defined the subgraphs.</p>
 <div class="cell tag_hide-input docutils container">
@@ -671,7 +704,7 @@ vs
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/kc_stereotypy_9_1.png" src="_images/kc_stereotypy_9_1.png" />
+<img alt="_images/kc_stereotypy_11_1.png" src="_images/kc_stereotypy_11_1.png" />
 </div>
 </div>
 </section>
@@ -755,7 +788,7 @@ which is not in the right.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/kc_stereotypy_14_1.png" src="_images/kc_stereotypy_14_1.png" />
+<img alt="_images/kc_stereotypy_16_1.png" src="_images/kc_stereotypy_16_1.png" />
 </div>
 </div>
 <p>We also compute a metric to measure the degree of overlap between the matched
@@ -818,7 +851,7 @@ to.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                                                                              
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                            
 </pre></div>
 </div>
 </div>
@@ -835,7 +868,7 @@ to.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/kc_stereotypy_20_1.png" src="_images/kc_stereotypy_20_1.png" />
+<img alt="_images/kc_stereotypy_22_1.png" src="_images/kc_stereotypy_22_1.png" />
 </div>
 </div>
 </section>
@@ -843,8 +876,8 @@ to.</p>
 <h2>Questions/thoughts<a class="headerlink" href="#questions-thoughts" title="Permalink to this headline">#</a></h2>
 <div class="note admonition">
 <p class="admonition-title">Note</p>
-<p><strong>Am I matching correctly for a pair of bipartite networks where one “part” is
-completely seeded?</strong></p>
+<p><strong>I am using the “restricted-focus seeded graph matching” since I have a pair of bipartite networks where one “part” is
+completely seeded</strong></p>
 <p>In this case, the graph matching minimization problem reduces to to solving a linear
 assignment problem to do</p>
 <div class="math notranslate nohighlight">
@@ -880,6 +913,185 @@ But in our case, that subgraph is empty.</p></li>
 <p><strong>How to deal with an unequal number of Kenyon cells?</strong></p>
 </div>
 </section>
+<section id="weighted">
+<h2>Weighted<a class="headerlink" href="#weighted" title="Permalink to this headline">#</a></h2>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pkg.data</span> <span class="kn">import</span> <span class="n">load_andre_subgraph</span>
+
+<span class="n">left_sub_df</span> <span class="o">=</span> <span class="n">load_andre_subgraph</span><span class="p">(</span><span class="s2">&quot;left_mb_odorant&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">((</span><span class="n">left_sub_df</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+<span class="n">right_sub_df</span> <span class="o">=</span> <span class="n">load_andre_subgraph</span><span class="p">(</span><span class="s2">&quot;right_mb_odorant&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">((</span><span class="n">right_sub_df</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">setxor1d</span><span class="p">(</span><span class="n">left_sub_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">right_sub_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+<span class="n">right_sub_df</span> <span class="o">=</span> <span class="n">right_sub_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">21</span><span class="p">]</span>
+
+<span class="n">right_sub_df</span> <span class="o">=</span> <span class="n">right_sub_df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">left_sub_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(21, 49)
+(22, 64)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A_sub</span> <span class="o">=</span> <span class="n">left_sub_df</span><span class="o">.</span><span class="n">values</span>
+<span class="n">B_sub</span> <span class="o">=</span> <span class="n">right_sub_df</span><span class="o">.</span><span class="n">values</span>
+
+<span class="n">A_pn_strength</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">A_sub</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">B_pn_strength</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">B_sub</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">A_node_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">A_pn_strength</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;strength&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">left_sub_df</span><span class="o">.</span><span class="n">index</span>
+<span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">A_node_data</span><span class="p">[</span><span class="s2">&quot;side&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Left&quot;</span>
+
+<span class="n">B_node_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">B_pn_strength</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;strength&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">right_sub_df</span><span class="o">.</span><span class="n">index</span>
+<span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">B_node_data</span><span class="p">[</span><span class="s2">&quot;side&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Right&quot;</span>
+
+<span class="n">node_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">A_node_data</span><span class="p">,</span> <span class="n">B_node_data</span><span class="p">))</span>
+<span class="n">sort_index</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;PN&quot;</span><span class="p">)[</span><span class="s2">&quot;strength&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">node_data</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;PN&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;strength&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;side&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">sort_index</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">move_legend</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Side&quot;</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Node strength&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s2">&quot;PN&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s2">&quot;strength&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s2">&quot;side&quot;</span><span class="p">),</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Left&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;Right&quot;</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;AxesSubplot:xlabel=&#39;Left&#39;, ylabel=&#39;Right&#39;&gt;
+</pre></div>
+</div>
+<img alt="_images/kc_stereotypy_26_1.png" src="_images/kc_stereotypy_26_1.png" />
+<img alt="_images/kc_stereotypy_26_2.png" src="_images/kc_stereotypy_26_2.png" />
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">perm</span><span class="p">,</span> <span class="n">B_sub_perm</span> <span class="o">=</span> <span class="n">match_seeded_subgraphs</span><span class="p">(</span><span class="n">A_sub</span><span class="p">,</span> <span class="n">B_sub</span><span class="p">)</span>
+<span class="c1"># B_sub_perm = B_sub[:, :A_sub.shape[1]]</span>
+<span class="nb">ord</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">stat_observed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A_sub</span> <span class="o">-</span> <span class="n">B_sub_perm</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="nb">ord</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_alignment</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)):</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">left</span> <span class="o">-</span> <span class="n">right</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+    <span class="n">matrixplot</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">matrixplot</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">matrixplot</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="n">cbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Right&quot;</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;L - R&quot;</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span>
+
+
+<span class="n">plot_alignment</span><span class="p">(</span><span class="n">A_sub</span><span class="p">,</span> <span class="n">B_sub_perm</span><span class="p">)</span>
+
+<span class="n">gluefig</span><span class="p">(</span><span class="s2">&quot;matched_subgraphs_weighted&quot;</span><span class="p">,</span> <span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/kc_stereotypy_28_1.png" src="_images/kc_stereotypy_28_1.png" />
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weights_A</span> <span class="o">=</span> <span class="n">A_sub</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">A_sub</span><span class="p">)]</span>
+<span class="n">weights_B</span> <span class="o">=</span> <span class="n">B_sub</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">B_sub</span><span class="p">)]</span>
+<span class="n">p_A</span> <span class="o">=</span> <span class="n">compute_density_subgraph</span><span class="p">(</span><span class="n">A_sub</span><span class="p">)</span>
+<span class="n">p_B</span> <span class="o">=</span> <span class="n">compute_density_subgraph</span><span class="p">(</span><span class="n">B_sub</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">weighted_er_subgraph</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">subgraph</span> <span class="o">=</span> <span class="n">er_subgraph</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+    <span class="n">row_inds</span><span class="p">,</span> <span class="n">col_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">subgraph</span><span class="p">)</span>
+    <span class="n">n_edges</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_inds</span><span class="p">)</span>
+    <span class="n">sampled_weights</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_edges</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">)</span>
+    <span class="n">subgraph</span><span class="p">[</span><span class="n">row_inds</span><span class="p">,</span> <span class="n">col_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampled_weights</span>
+    <span class="k">return</span> <span class="n">subgraph</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">):</span>
+    <span class="n">A_sim</span> <span class="o">=</span> <span class="n">weighted_er_subgraph</span><span class="p">(</span><span class="n">A_sub</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">p_A</span><span class="p">,</span> <span class="n">weights_A</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+    <span class="n">B_sim</span> <span class="o">=</span> <span class="n">weighted_er_subgraph</span><span class="p">(</span><span class="n">B_sub</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">p_B</span><span class="p">,</span> <span class="n">weights_B</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+    <span class="n">perm</span><span class="p">,</span> <span class="n">B_sim_perm</span> <span class="o">=</span> <span class="n">match_seeded_subgraphs</span><span class="p">(</span><span class="n">A_sim</span><span class="p">,</span> <span class="n">B_sim</span><span class="p">)</span>
+
+    <span class="n">stat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A_sim</span> <span class="o">-</span> <span class="n">B_sim_perm</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="nb">ord</span><span class="p">)</span>
+    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;Random&quot;</span><span class="p">,</span> <span class="s2">&quot;stat&quot;</span><span class="p">:</span> <span class="n">stat</span><span class="p">})</span>
+
+<span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;Observed&quot;</span><span class="p">,</span> <span class="s2">&quot;stat&quot;</span><span class="p">:</span> <span class="n">stat_observed</span><span class="p">})</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_alignment</span><span class="p">(</span><span class="n">A_sim</span><span class="p">,</span> <span class="n">B_sim_perm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(&lt;Figure size 576x576 with 3 Axes&gt;,
+ array([&lt;AxesSubplot:ylabel=&#39;Left&#39;&gt;, &lt;AxesSubplot:ylabel=&#39;Right&#39;&gt;,
+        &lt;AxesSubplot:ylabel=&#39;L - R&#39;&gt;], dtype=object))
+</pre></div>
+</div>
+<img alt="_images/kc_stereotypy_31_1.png" src="_images/kc_stereotypy_31_1.png" />
+</div>
+</div>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">histplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">results</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;stat&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">kde</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">yticks</span><span class="o">=</span><span class="p">[],</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Difference norm&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">gluefig</span><span class="p">(</span><span class="s2">&quot;alignment_dist_weighted&quot;</span><span class="p">,</span> <span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/kc_stereotypy_32_1.png" src="_images/kc_stereotypy_32_1.png" />
+</div>
+</div>
+</section>
 <section id="appendix">
 <h2>Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">#</a></h2>
 <section id="testing-alignment-strength-implementation">
@@ -911,7 +1123,7 @@ But in our case, that subgraph is empty.</p></li>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                                                                              
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                                                                                                                                                            
 </pre></div>
 </div>
 </div>
@@ -938,7 +1150,7 @@ But in our case, that subgraph is empty.</p></li>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/kc_stereotypy_24_0.png" src="_images/kc_stereotypy_24_0.png" />
+<img alt="_images/kc_stereotypy_35_0.png" src="_images/kc_stereotypy_35_0.png" />
 </div>
 </div>
 </section>
@@ -955,8 +1167,8 @@ But in our case, that subgraph is empty.</p></li>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Script took 0:00:21.051601
-Completed at 2022-05-11 11:42:00.272450
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Script took 0:00:18.727967
+Completed at 2022-07-13 10:38:15.185304
 </pre></div>
 </div>
 </div>
