@@ -41,7 +41,7 @@ from giskard.plot import histplot, matrixplot
 from graspologic.plot import heatmap
 from graspologic.simulations import er_corr
 from graspologic.utils import binarize
-from pkg.data import load_maggot_graph, load_unmatched
+from pkg.data import load_maggot_graph, load_unmatched, DATA_PATH
 from pkg.io import glue as default_glue
 from pkg.io import savefig
 from pkg.plot import set_theme
@@ -70,8 +70,8 @@ t0 = time.time()
 set_theme()
 rng = np.random.default_rng(8888)
 
-left_adj, left_nodes = load_unmatched("left")
-right_adj, right_nodes = load_unmatched("right")
+left_adj, left_nodes = load_unmatched("left", weights=True)
+right_adj, right_nodes = load_unmatched("right", weights=True)
 
 mg = load_maggot_graph()
 
@@ -117,7 +117,7 @@ def remove_unconnected_kcs(adj, index, n_upns):
 left_index = np.concatenate((upns_left, kcs_left))
 left_mg.nodes = left_mg.nodes.reindex(left_index)
 left_subgraph_mg = left_mg.node_subgraph(upns_left, kcs_left)
-left_adj = binarize(left_subgraph_mg.sum.adj)
+left_adj = left_subgraph_mg.sum.adj.copy()
 
 left_adj, left_index = remove_unconnected_kcs(left_adj, left_index, n_upns)
 left_labels = np.array(n_upns * ["uPN"] + (len(left_adj) - n_upns) * ["KC"])
@@ -125,7 +125,7 @@ left_labels = np.array(n_upns * ["uPN"] + (len(left_adj) - n_upns) * ["KC"])
 right_index = np.concatenate((upns_right, kcs_right))
 right_mg.nodes = right_mg.nodes.reindex(right_index)
 right_subgraph_mg = right_mg.node_subgraph(upns_right, kcs_right)
-right_adj = binarize(right_subgraph_mg.sum.adj)
+right_adj = right_subgraph_mg.sum.adj.copy()
 
 right_adj, right_index = remove_unconnected_kcs(right_adj, right_index, n_upns)
 right_labels = np.array(n_upns * ["uPN"] + (len(right_adj) - n_upns) * ["KC"])
@@ -142,6 +142,23 @@ print("Number of KCs (L vs. R):")
 print((left_labels == "KC").sum())
 print("vs")
 print((right_labels == "KC").sum())
+
+#%%
+
+right_adj_df = pd.DataFrame(data=right_adj, index=right_index, columns=right_index)
+right_adj_df.to_csv(DATA_PATH / "kc_processed_for_andre/right_adj.csv")
+right_meta = right_mg.nodes.loc[right_index, ["name", "hemisphere", "merge_class"]]
+right_meta.to_csv(DATA_PATH / "kc_processed_for_andre/right_nodes.csv")
+
+left_adj_df = pd.DataFrame(data=left_adj, index=left_index, columns=left_index)
+left_adj_df.to_csv(DATA_PATH / "kc_processed_for_andre/left_adj.csv")
+left_meta = left_mg.nodes.loc[left_index, ["name", "hemisphere", "merge_class"]]
+left_meta.to_csv(DATA_PATH / "kc_processed_for_andre/left_nodes.csv")
+
+
+#%%
+left_adj = binarize(left_adj)
+right_adj = binarize(right_adj)
 
 #%% [markdown]
 # Below we plot these subgraphs as adjacency matrices - note that there are a lot of
