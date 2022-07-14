@@ -8,7 +8,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from graspologic.match import graph_match
 from pkg.io import FIG_PATH, OUT_PATH
 from pkg.data import DATA_PATH
@@ -19,6 +18,7 @@ from scipy.io import mmread
 from scipy.sparse import csr_array
 from tqdm.autonotebook import tqdm
 from git import Repo
+from giskard.plot import confusionplot
 
 DISPLAY_FIGS = True
 
@@ -195,61 +195,29 @@ else:
 results
 
 #%%
-perm = np.zeros(n)
-perm[undo_perm] = matches[0]
-(np.arange(n) == perm).mean()
-#%%
 id_matches = []
 for match in matches:
     id_matches.append(right_nodes[match])
 match_df = pd.DataFrame(id_matches).T
 match_df.set_index(left_nodes)
 
-avg_n_unique = 0
-for idx, row in match_df.iterrows():
-    n_unique = row.nunique()
-    avg_n_unique += n_unique / len(match_df)
-avg_n_unique
+# avg_n_unique = 0
+# for idx, row in match_df.iterrows():
+#     n_unique = row.nunique()
+#     avg_n_unique += n_unique / len(match_df)
+# avg_n_unique
 
+#%% [markdown]
+# ## Group confusion matrices for the full dataset
 #%%
-
-from scipy.cluster.hierarchy import (
-    fcluster,
-    linkage,
-    optimal_leaf_ordering,
-    leaves_list,
-)
-from scipy.spatial.distance import squareform
 
 right_matched_meta = right_meta.iloc[match].copy().reset_index()
 left_matched_meta = left_meta.copy().reset_index()
 matched_meta = left_matched_meta.join(
     right_matched_meta, lsuffix="_left", rsuffix="_right"
 )
+
 fields = ["predicted_nt", "class", "hemilineage"]
-for field in fields:
-    cross = pd.crosstab(
-        matched_meta[field + "_left"], matched_meta[field + "_right"], dropna=False
-    )
-    cross_values = cross.values.copy().astype(float)
-    dissimilarity = cross_values.max() - cross_values
-    dissimilarity = dissimilarity + dissimilarity.T
-    dissimilarity -= np.diag(np.diag(dissimilarity))
-    dissimilarity = squareform(dissimilarity)
-    Z = linkage(dissimilarity, method="average")
-    Z_ordered = optimal_leaf_ordering(Z, dissimilarity)
-    sort_inds = leaves_list(Z)
-
-    cross_values[cross_values == 0] = np.nan
-    cross = pd.DataFrame(data=cross_values, index=cross.index, columns=cross.columns)
-    cross = cross.iloc[sort_inds, sort_inds]
-    fig, ax = plt.subplots(1, 1, figsize=(12, 12))
-    sns.heatmap(cross, ax=ax, annot=True, cmap="RdBu_r", center=0, square=True)
-    ax.set(xticks=ax.get_yticks(), xticklabels=ax.get_yticklabels())
-
-#%%
-from giskard.plot import confusionplot
-
 for field in fields:
     confusionplot(
         matched_meta[field + "_left"].fillna("unknown").values,
@@ -259,6 +227,8 @@ for field in fields:
         figsize=(12, 12),
     )
 
+#%% [markdown]
+# ## Confusion matrices for the incorrect matches only
 #%%
 incorrect_meta = matched_meta[matched_meta["group_left"] != matched_meta["group_right"]]
 for field in fields:
@@ -270,6 +240,8 @@ for field in fields:
         figsize=(12, 12),
     )
 
+#%% [markdown]
+# ## Confusion matrices for the correct matches only
 #%%
 correct_meta = matched_meta[matched_meta["group_left"] == matched_meta["group_right"]]
 for field in fields:
