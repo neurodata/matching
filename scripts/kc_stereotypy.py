@@ -263,6 +263,71 @@ fig.set_facecolor("w")
 
 gluefig("matched_subgraphs", fig)
 
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+left_color = "#66c2a5"
+right_color = "#fc8d62"
+pn_left_start = (0.1, 0.75)
+kc_left_start = (0.3, 0.9)
+kc_right_start = (0.7, 0.9)
+pn_right_start = (0.9, 0.75)
+n_pn = 5
+n_kc = 15
+
+
+def draw_dots(start, n, gap, color):
+    positions = []
+    for i in range(n):
+        pos = start[0], start[1] - i * gap
+        ax.scatter(*pos, color=color)
+        positions.append(pos)
+    return positions
+
+
+left_pn_pos = draw_dots(pn_left_start, n_pn, 0.1, left_color)
+left_kc_pos = draw_dots(kc_left_start, n_kc, 0.05, left_color)
+right_kc_pos = draw_dots(kc_right_start, n_kc, 0.05, right_color)
+right_pn_pos = draw_dots(pn_right_start, n_pn, 0.1, right_color)
+
+
+def draw_edges(p, k, pos1s, pos2s, color):
+    for i, pos1 in enumerate(pos1s):
+        edges = 0
+        while edges < k:
+            for j, pos2 in enumerate(pos2s):
+                if rng.uniform() < p:
+                    ax.plot(
+                        (pos1[0], pos2[0]), (pos1[1], pos2[1]), color=color, linewidth=1
+                    )
+                    edges += 1
+
+
+rng = np.random.default_rng(888888)
+draw_edges(0.2, 7, left_pn_pos, left_kc_pos, left_color)
+draw_edges(0.2, 7, right_pn_pos, right_kc_pos, right_color)
+
+perm = rng.permutation(n_kc)
+for i, target in enumerate(perm):
+    pos1 = left_kc_pos[i]
+    pos2 = right_kc_pos[target]
+    ax.plot(
+        (pos1[0], pos2[0]),
+        (pos1[1], pos2[1]),
+        color="grey",
+        linewidth=1,
+        zorder=-1,
+        linestyle="--",
+    )
+fontsize = "large"
+ax.text(pn_left_start[0], 0.25, "PNs", color=left_color, size=fontsize, ha="center")
+ax.text(kc_left_start[0], 0.1, "KCs", color=left_color, size=fontsize, ha="center")
+ax.text(pn_right_start[0], 0.25, "PNs", color=right_color, size=fontsize, ha="center")
+ax.text(kc_right_start[0], 0.1, "KCs", color=right_color, size=fontsize, ha="center")
+ax.text(0.5, 0.5, r"$P$", ha="center", va="center", fontsize="xx-large")
+ax.set(xlim=(0, 1), ylim=(0, 1))
+ax.axis('off')
+gluefig('diagram', fig)
 
 #%% [markdown]
 # We also compute a metric to measure the degree of overlap between the matched
@@ -326,7 +391,7 @@ fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 histplot(data=results, x="alignment", hue="data", kde=True, ax=ax)
 ax.set(ylabel="", yticks=[], xlabel="Alignment strength")
 ax.spines["left"].set_visible(False)
-
+sns.move_legend(ax, loc="upper left")
 gluefig("alignment_dist", fig)
 
 #%% [markdown]

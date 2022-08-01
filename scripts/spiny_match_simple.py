@@ -134,6 +134,61 @@ def select_adjacency(source, target=None, sparse=False):
 # info like objective function value, timing, etc.). Because of this, here I am only
 # selecting the neurons for which there is already a pair prediction (i.e. only 2
 # neurons in the "group" field, and one on each hemisphere).
+
+#%%
+
+
+neuromere = "T1"
+sparse = False
+left_meta, right_meta = select_paired_neuromere(meta, neuromere)
+left_nodes = left_meta.index
+right_nodes = right_meta.index
+
+A = select_adjacency(left_nodes, left_nodes, sparse=sparse)
+B = select_adjacency(right_nodes, right_nodes, sparse=sparse)
+n = A.shape[0]
+perm = np.random.permutation(n)
+P = np.eye(n)
+P = P[perm]
+
+#%%
+np.trace(A @ P @ B.T @ P.T)
+#%%
+%timeit np.trace(A @ P @ B.T @ P.T)
+
+#%%
+float(np.einsum('ij,jk,kl,li->', A, P, B.T, P.T, optimize=True))
+
+#%%
+# #%%
+# %timeit np.einsum('ij,jk,kl,li->', A, P, B.T, P.T)
+#%%
+path, out = np.einsum_path('ij,jk,kl,li->', A, P, B.T, P.T, optimize=True)
+
+#%%
+%timeit np.einsum('ij,jk,kl,li->', A, P, B.T, P.T , optimize=path)
+#%%
+float(np.einsum('ij,ji->', A, P, optimize=True))
+#%%
+np.trace(A.T @ P)
+#%%
+
+m, n = 1000, 500
+
+a = np.random.rand(m, n)
+b = np.random.rand(n, m)
+
+# They all should give the same result
+print(np.trace(a @ b))
+print(np.sum(a*b.T))
+print(np.einsum('ij,ji->', a, b))
+
+%timeit np.trace(a.dot(b))
+
+%timeit np.sum(a*b.T)
+
+%timeit np.einsum('ij,ji->', a, b)
+
 #%%
 
 RERUN = False
