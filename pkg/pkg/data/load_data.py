@@ -199,3 +199,30 @@ def load_andre_subgraph(name):
     csv.index.name = "PN"
     csv.columns.name = "KC"
     return csv
+
+
+def load_split_connectome(dataset, weights=True):
+    dir = DATA_PATH / "processed_split"
+    if weights:
+        data = (("weight", int),)
+    else:
+        data = False
+    if dataset in [
+        "herm_chem",
+        "male_chem",
+        "specimen_107",
+        "specimen_148",
+    ]:
+        nodetype = str
+    elif dataset in ["maggot", "maggot_subset"]:
+        nodetype = int
+    g = nx.read_edgelist(
+        dir / f"{dataset}_edgelist.csv",
+        create_using=nx.DiGraph,
+        delimiter=",",
+        nodetype=nodetype,
+        data=data,
+    )
+    nodes = pd.read_csv(dir / f"{dataset}_nodes.csv", index_col=0)
+    adj = nx.to_numpy_array(g, nodelist=nodes.index)
+    return adj, nodes

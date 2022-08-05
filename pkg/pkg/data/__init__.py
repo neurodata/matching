@@ -14,5 +14,6 @@ from .load_data import (
     load_unmatched,
     load_matched,
     load_andre_subgraph,
+    load_split_connectome,
 )
 from .preprocess import select_nice_nodes

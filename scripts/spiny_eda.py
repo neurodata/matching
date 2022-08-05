@@ -15,11 +15,14 @@ meta_loc = "matching/data/spiny/meta_adj_spiny_big.csv"
 meta = pd.read_csv(meta_loc, index_col=0)
 meta["bodyid"] = meta["bodyid"].astype(int)
 meta = meta.set_index("bodyid")
+print(len(meta))
 #%%
 adj_loc = "matching/data/spiny/adj_spiny_big.mtx"
 adj_dense = mmread(adj_loc).toarray()
 adj_df = pd.DataFrame(data=adj_dense, index=meta.index, columns=meta.index)
-
+print(adj_df.shape[0])
+print(np.count_nonzero(adj_df.values))
+print(np.sum(adj_df.values))
 # %%
 adj = adj_df.values
 adj_lcc, inds = largest_connected_component(adj, return_inds=True)
