@@ -326,8 +326,8 @@ ax.text(pn_right_start[0], 0.25, "PNs", color=right_color, size=fontsize, ha="ce
 ax.text(kc_right_start[0], 0.1, "KCs", color=right_color, size=fontsize, ha="center")
 ax.text(0.5, 0.5, r"$P$", ha="center", va="center", fontsize="xx-large")
 ax.set(xlim=(0, 1), ylim=(0, 1))
-ax.axis('off')
-gluefig('diagram', fig)
+ax.axis("off")
+gluefig("diagram", fig)
 
 #%% [markdown]
 # We also compute a metric to measure the degree of overlap between the matched
@@ -559,6 +559,99 @@ results = pd.DataFrame(rows)
 #%%
 
 plot_alignment(A_sim, B_sim_perm)
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+histplot(data=results, x="stat", hue="data", kde=True, ax=ax)
+ax.set(ylabel="", yticks=[], xlabel="Difference norm")
+ax.spines["left"].set_visible(False)
+
+gluefig("alignment_dist_weighted", fig)
+
+#%%
+A_sub
+
+from numba import njit
+
+
+@njit
+def swap_edge(adjacency, edge_list):
+    orig_inds = np.random.choice(len(edge_list), size=2, replace=False)
+    u, v = edge_list[orig_inds[0]]
+    x, y = edge_list[orig_inds[1]]
+
+    # edge already exists, hold
+    if adjacency[u, y] == 1 or adjacency[x, v] == 1:
+        return adjacency, edge_list
+
+    # no possibility of self-loops in this case
+
+    # don't need to check reverse edge, since directed
+
+    # perform the swap
+    adjacency[u, v] = 0
+    adjacency[x, y] = 0
+
+    adjacency[u, y] = 1
+    adjacency[x, v] = 1
+
+    # update edge list
+    edge_list[orig_inds[0]] = [u, y]
+    edge_list[orig_inds[1]] = [x, v]
+    return adjacency, edge_list
+
+
+def swap_edges(adjacency, n_swaps=1):
+    adjacency = adjacency.copy()
+    row_inds, col_inds = np.nonzero(adjacency)
+    # TODO numba this for-loop?
+    edge_list = np.array((row_inds, col_inds)).T
+    for i in range(n_swaps):
+        adjacency, edge_list = swap_edge(adjacency, edge_list)
+    return adjacency
+
+
+def apply_weights(adjacency, weights):
+    row_inds, col_inds = np.nonzero(adjacency)
+    weights = weights.copy()
+    np.random.shuffle(weights)
+    adjacency[row_inds, col_inds] = weights
+    return adjacency
+
+
+def generate_subgraph_samples(adjacency, n_samples=100, n_swaps=100000):
+    adjacency = adjacency.copy()
+    row_inds, col_inds = np.nonzero(adjacency)
+    weights = adjacency[row_inds, col_inds].copy()
+    adjacency[adjacency > 0] = 1
+
+    samples = []
+    for i in tqdm(range(n_samples)):
+        adjacency = swap_edges(adjacency, n_swaps=n_swaps)
+        adjacency = apply_weights(adjacency, weights)
+        samples.append(adjacency.copy())
+
+    return samples
+
+
+from tqdm.autonotebook import tqdm
+from random import shuffle
+
+A_sub_samples = generate_subgraph_samples(A_sub, n_samples=100, n_swaps=1000000)
+B_sub_samples = generate_subgraph_samples(B_sub, n_samples=100, n_swaps=1000000)
+shuffle(B_sub_samples)
+#%%
+ord = 2
+rows = []
+for i in range(100):
+    perm_inds, B_sub_perm = match_seeded_subgraphs(A_sub_samples[i], B_sub_samples[i])
+    stat = np.linalg.norm(A_sub_samples[i] - B_sub_perm, ord=ord)
+    rows.append({"data": "Random", "stat": stat})
+
+perm, B_sub_perm = match_seeded_subgraphs(A_sub, B_sub)
+stat_observed = np.linalg.norm(A_sub - B_sub_perm, ord=ord)
+rows.append({"data": "Observed", "stat": stat_observed})
+results = pd.DataFrame(rows)
 
 #%%
 fig, ax = plt.subplots(1, 1, figsize=(8, 6))
