@@ -452,62 +452,62 @@ title="Print to PDF"
 <h1>Benchmarks<a class="headerlink" href="#benchmarks" title="Permalink to this headline">#</a></h1>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">time</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import datetime
+import time
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">from</span> <span class="nn">graspologic.simulations</span> <span class="kn">import</span> <span class="n">er_corr</span>
-<span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">FIG_PATH</span><span class="p">,</span> <span class="n">OUT_PATH</span>
-<span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">glue</span> <span class="k">as</span> <span class="n">default_glue</span>
-<span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">savefig</span>
-<span class="kn">from</span> <span class="nn">pkg.match</span> <span class="kn">import</span> <span class="n">GraphMatchSolver</span>
-<span class="kn">from</span> <span class="nn">pkg.plot</span> <span class="kn">import</span> <span class="n">set_theme</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from graspologic.simulations import er_corr
+from pkg.io import FIG_PATH, OUT_PATH
+from pkg.io import glue as default_glue
+from pkg.io import savefig
+from pkg.match import GraphMatchSolver
+from pkg.plot import set_theme
+from tqdm import tqdm
 
-<span class="n">DISPLAY_FIGS</span> <span class="o">=</span> <span class="kc">True</span>
+DISPLAY_FIGS = True
 
-<span class="n">FILENAME</span> <span class="o">=</span> <span class="s2">&quot;benchmarks&quot;</span>
+FILENAME = &quot;benchmarks&quot;
 
-<span class="n">OUT_PATH</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">/</span> <span class="n">FILENAME</span>
+OUT_PATH = OUT_PATH / FILENAME
 
-<span class="n">FIG_PATH</span> <span class="o">=</span> <span class="n">FIG_PATH</span> <span class="o">/</span> <span class="n">FILENAME</span>
-
-
-<span class="k">def</span> <span class="nf">glue</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="n">default_glue</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">FILENAME</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+FIG_PATH = FIG_PATH / FILENAME
 
 
-<span class="k">def</span> <span class="nf">gluefig</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">foldername</span><span class="o">=</span><span class="n">FILENAME</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="n">glue</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">DISPLAY_FIGS</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+def glue(name, var, **kwargs):
+    default_glue(name, var, FILENAME, **kwargs)
 
 
-<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-<span class="n">set_theme</span><span class="p">()</span>
-<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">8888</span><span class="p">)</span>
+def gluefig(name, fig, **kwargs):
+    savefig(name, foldername=FILENAME, **kwargs)
+
+    glue(name, fig, figure=True)
+
+    if not DISPLAY_FIGS:
+        plt.close()
+
+
+t0 = time.time()
+set_theme()
+rng = np.random.default_rng(8888)
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_side</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">glue</span><span class="p">(</span><span class="s2">&quot;n_side&quot;</span><span class="p">,</span> <span class="n">n_side</span><span class="p">)</span>
-<span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="n">glue</span><span class="p">(</span><span class="s2">&quot;n_sims&quot;</span><span class="p">,</span> <span class="n">n_sims</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="s2">&quot;long&quot;</span><span class="p">)</span>
-<span class="n">ipsi_rho</span> <span class="o">=</span> <span class="mf">0.8</span>
-<span class="n">glue</span><span class="p">(</span><span class="s2">&quot;ipsi_rho&quot;</span><span class="p">,</span> <span class="n">ipsi_rho</span><span class="p">)</span>
-<span class="n">ipsi_p</span> <span class="o">=</span> <span class="mf">0.3</span>
-<span class="n">glue</span><span class="p">(</span><span class="s2">&quot;ipsi_p&quot;</span><span class="p">,</span> <span class="n">ipsi_p</span><span class="p">)</span>
-<span class="n">contra_p</span> <span class="o">=</span> <span class="mf">0.2</span>
-<span class="n">glue</span><span class="p">(</span><span class="s2">&quot;contra_p&quot;</span><span class="p">,</span> <span class="n">contra_p</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>n_side = 10
+glue(&quot;n_side&quot;, n_side)
+n_sims = 1000
+glue(&quot;n_sims&quot;, n_sims, form=&quot;long&quot;)
+ipsi_rho = 0.8
+glue(&quot;ipsi_rho&quot;, ipsi_rho)
+ipsi_p = 0.3
+glue(&quot;ipsi_p&quot;, ipsi_p)
+contra_p = 0.2
+glue(&quot;contra_p&quot;, contra_p)
 </pre></div>
 </div>
 </div>
@@ -518,24 +518,24 @@ title="Print to PDF"
 <h2>Seeds<a class="headerlink" href="#seeds" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">contra_rho</span> <span class="o">=</span> <span class="mf">0.6</span>
-<span class="c1"># simulate the correlated subgraphs</span>
-<span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">n_seeds</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">n_seeds</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">seeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_seeds</span><span class="p">)</span>
-            <span class="n">partial_match</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">seeds</span><span class="p">,</span> <span class="n">seeds</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">partial_match</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">ipsi_p</span><span class="p">,</span> <span class="n">ipsi_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">AB</span><span class="p">,</span> <span class="n">BA</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">contra_p</span><span class="p">,</span> <span class="n">contra_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">solver</span> <span class="o">=</span> <span class="n">GraphMatchSolver</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">partial_match</span><span class="o">=</span><span class="n">partial_match</span><span class="p">)</span>
-        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-        <span class="n">match_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">permutation_</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;n_seeds&quot;</span><span class="p">:</span> <span class="n">n_seeds</span><span class="p">,</span> <span class="s2">&quot;match_ratio&quot;</span><span class="p">:</span> <span class="n">match_ratio</span><span class="p">})</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>contra_rho = 0.6
+# simulate the correlated subgraphs
+n_sims = 1000
+rows = []
+for n_seeds in [0, 1, 2, 3, 4, 5]:
+    for sim in tqdm(range(n_sims), leave=False):
+        if n_seeds &gt; 0:
+            seeds = np.arange(n_seeds)
+            partial_match = np.stack((seeds, seeds)).T
+        else:
+            partial_match = None
+        A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        AB, BA = er_corr(n_side, contra_p, contra_rho, directed=True)
+        solver = GraphMatchSolver(A, B, verbose=0, partial_match=partial_match)
+        solver.solve()
+        match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
+        rows.append({&quot;n_seeds&quot;: n_seeds, &quot;match_ratio&quot;: match_ratio})
+results = pd.DataFrame(rows)
 </pre></div>
 </div>
 </div>
@@ -547,11 +547,11 @@ title="Print to PDF"
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
-<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">results</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;n_seeds&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;match_ratio&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+sns.lineplot(data=results, x=&quot;n_seeds&quot;, y=&quot;match_ratio&quot;, ax=ax)
 
-<span class="n">gluefig</span><span class="p">(</span><span class="s2">&quot;accuracy_by_seeds&quot;</span><span class="p">,</span> <span class="n">fig</span><span class="p">)</span>
+gluefig(&quot;accuracy_by_seeds&quot;, fig)
 </pre></div>
 </div>
 </div>
@@ -564,18 +564,19 @@ title="Print to PDF"
 <h2>Multilayer<a class="headerlink" href="#multilayer" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># simulate the correlated subgraphs</span>
-<span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">second_layer_rho</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">ipsi_p</span><span class="p">,</span> <span class="n">ipsi_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">A2</span><span class="p">,</span> <span class="n">B2</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">contra_p</span><span class="p">,</span> <span class="n">second_layer_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">solver</span> <span class="o">=</span> <span class="n">GraphMatchSolver</span><span class="p">([</span><span class="n">A1</span><span class="p">,</span> <span class="n">A2</span><span class="p">],</span> <span class="p">[</span><span class="n">B1</span><span class="p">,</span> <span class="n">B2</span><span class="p">])</span>
-        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-        <span class="n">match_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">permutation_</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;second_layer_rho&quot;</span><span class="p">:</span> <span class="n">second_layer_rho</span><span class="p">,</span> <span class="s2">&quot;match_ratio&quot;</span><span class="p">:</span> <span class="n">match_ratio</span><span class="p">})</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+# simulate the correlated subgraphs
+n_sims = 1000
+rows = []
+for second_layer_rho in np.linspace(0, 1, 6):
+    for sim in tqdm(range(n_sims), leave=False):
+        A1, B1 = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        A2, B2 = er_corr(n_side, contra_p, second_layer_rho, directed=True)
+        solver = GraphMatchSolver([A1, A2], [B1, B2])
+        solver.solve()
+        match_ratio = (solver.permutation_ == np.arange(len(A))).mean()
+        rows.append({&quot;second_layer_rho&quot;: second_layer_rho, &quot;match_ratio&quot;: match_ratio})
+results = pd.DataFrame(rows)
 </pre></div>
 </div>
 </div>
@@ -587,11 +588,11 @@ title="Print to PDF"
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
-<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">results</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;second_layer_rho&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;match_ratio&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+sns.lineplot(data=results, x=&quot;second_layer_rho&quot;, y=&quot;match_ratio&quot;, ax=ax)
 
-<span class="n">gluefig</span><span class="p">(</span><span class="s2">&quot;accuracy_by_seeds&quot;</span><span class="p">,</span> <span class="n">fig</span><span class="p">)</span>
+gluefig(&quot;accuracy_by_seeds&quot;, fig)
 </pre></div>
 </div>
 </div>
@@ -604,22 +605,22 @@ title="Print to PDF"
 <h2>Optimal transport<a class="headerlink" href="#optimal-transport" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># REF: Figure 2B of https://arxiv.org/abs/2111.05366</span>
-<span class="n">n_sims</span> <span class="o">=</span> <span class="mi">25</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">250</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
-<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span><span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-    <span class="n">perm</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-    <span class="n">undo_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
-    <span class="n">B</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">perm</span><span class="p">][:,</span> <span class="n">perm</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">transport</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]:</span>
-        <span class="n">solver</span> <span class="o">=</span> <span class="n">GraphMatchSolver</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">,</span> <span class="n">transport_regularizer</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
-        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-        <span class="n">match_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">permutation_</span> <span class="o">==</span> <span class="n">undo_perm</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;transport&quot;</span><span class="p">:</span> <span class="n">transport</span><span class="p">,</span> <span class="s2">&quot;match_ratio&quot;</span><span class="p">:</span> <span class="n">match_ratio</span><span class="p">})</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># REF: Figure 2B of https://arxiv.org/abs/2111.05366
+n_sims = 25
+n = 250
+p = np.log(n) / n
+rows = []
+for sim in tqdm(range(n_sims),leave=False):
+    A, B = er_corr(n, p, 1.0)
+    perm = rng.permutation(n)
+    undo_perm = np.argsort(perm)
+    B = B[perm][:, perm]
+    for transport in [True, False]:
+        solver = GraphMatchSolver(A, B, transport=transport, transport_regularizer=200)
+        solver.solve()
+        match_ratio = (solver.permutation_ == undo_perm).mean()
+        rows.append({&quot;transport&quot;: transport, &quot;match_ratio&quot;: match_ratio})
+results = pd.DataFrame(rows)
 </pre></div>
 </div>
 </div>
@@ -633,8 +634,8 @@ title="Print to PDF"
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">results</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;transport&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;match_ratio&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+sns.barplot(data=results, x=&quot;transport&quot;, y=&quot;match_ratio&quot;, ax=ax)
 </pre></div>
 </div>
 </div>
@@ -650,23 +651,24 @@ title="Print to PDF"
 <h2>Similarity<a class="headerlink" href="#similarity" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_sims</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">lamb</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_sims</span><span class="p">),</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+n_sims = 1000
+rows = []
+for lamb in np.linspace(0, 10, 6):
+    for sim in tqdm(range(n_sims), leave=False):
 
-        <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">er_corr</span><span class="p">(</span><span class="n">n_side</span><span class="p">,</span> <span class="n">ipsi_p</span><span class="p">,</span> <span class="n">ipsi_rho</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">lamb</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">perm</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n_side</span><span class="p">)</span>
-        <span class="n">undo_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="p">[:,</span> <span class="n">perm</span><span class="p">]</span>
+        A, B = er_corr(n_side, ipsi_p, ipsi_rho, directed=True)
+        S = lamb * np.eye(B.shape[0])
+        perm = rng.permutation(n_side)
+        undo_perm = np.argsort(perm)
+        S = S[:, perm]
 
-        <span class="n">solver</span> <span class="o">=</span> <span class="n">GraphMatchSolver</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">similarity</span><span class="o">=</span><span class="n">S</span><span class="p">)</span>
-        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-        <span class="n">match_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">permutation_</span> <span class="o">==</span> <span class="n">undo_perm</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;lambda&quot;</span><span class="p">:</span> <span class="n">lamb</span><span class="p">,</span> <span class="s2">&quot;match_ratio&quot;</span><span class="p">:</span> <span class="n">match_ratio</span><span class="p">})</span>
+        solver = GraphMatchSolver(A, B, similarity=S)
+        solver.solve()
+        match_ratio = (solver.permutation_ == undo_perm).mean()
+        rows.append({&quot;lambda&quot;: lamb, &quot;match_ratio&quot;: match_ratio})
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+results = pd.DataFrame(rows)
 </pre></div>
 </div>
 </div>
@@ -678,9 +680,10 @@ title="Print to PDF"
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
-<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">results</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;lambda&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;match_ratio&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+sns.lineplot(data=results, x=&quot;lambda&quot;, y=&quot;match_ratio&quot;, ax=ax)
 </pre></div>
 </div>
 </div>
@@ -696,10 +699,11 @@ title="Print to PDF"
 <h2>End<a class="headerlink" href="#end" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
-<span class="n">delta</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">elapsed</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Script took </span><span class="si">{</span><span class="n">delta</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Completed at </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+elapsed = time.time() - t0
+delta = datetime.timedelta(seconds=elapsed)
+print(f&quot;Script took {delta}&quot;)
+print(f&quot;Completed at {datetime.datetime.now()}&quot;)
 </pre></div>
 </div>
 </div>
