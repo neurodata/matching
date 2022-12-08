@@ -192,8 +192,10 @@ def load_data(graph_type, base_path=None, version=None):
     return Bunch(graph=graph, adj=adj, meta=meta)
 
 
-def load_andre_subgraph(name):
+def load_andre_subgraph(name, folder=None):
     path = DATA_PATH / "andre"
+    if folder is not None: 
+        path = path / folder
     path = path / (name + ".csv")
     csv = pd.read_csv(path, index_col=0)
     csv.index.name = "PN"
