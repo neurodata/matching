@@ -452,57 +452,56 @@ title="Print to PDF"
 <h1>Matching experiments in spiny<a class="headerlink" href="#matching-experiments-in-spiny" title="Permalink to this headline">#</a></h1>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-import time
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from graspologic.match import graph_match
-from pkg.io import FIG_PATH, OUT_PATH
-from pkg.data import DATA_PATH
-from pkg.io import glue as default_glue
-from pkg.io import savefig
-from pkg.plot import set_theme
-from scipy.io import mmread
-from scipy.sparse import csr_array
-from tqdm.autonotebook import tqdm
-from git import Repo
-from giskard.plot import confusionplot
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">graspologic.match</span> <span class="kn">import</span> <span class="n">graph_match</span>
+<span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">FIG_PATH</span><span class="p">,</span> <span class="n">OUT_PATH</span>
+<span class="kn">from</span> <span class="nn">pkg.data</span> <span class="kn">import</span> <span class="n">DATA_PATH</span>
+<span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">glue</span> <span class="k">as</span> <span class="n">default_glue</span>
+<span class="kn">from</span> <span class="nn">pkg.io</span> <span class="kn">import</span> <span class="n">savefig</span>
+<span class="kn">from</span> <span class="nn">pkg.plot</span> <span class="kn">import</span> <span class="n">set_theme</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">mmread</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csr_array</span>
+<span class="kn">from</span> <span class="nn">tqdm.autonotebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">git</span> <span class="kn">import</span> <span class="n">Repo</span>
+<span class="kn">from</span> <span class="nn">giskard.plot</span> <span class="kn">import</span> <span class="n">confusionplot</span>
 
-DISPLAY_FIGS = True
+<span class="n">DISPLAY_FIGS</span> <span class="o">=</span> <span class="kc">True</span>
 
-FILENAME = &quot;spiny_match_check_errors&quot;
+<span class="n">FILENAME</span> <span class="o">=</span> <span class="s2">&quot;spiny_match_check_errors&quot;</span>
 
-OUT_PATH = OUT_PATH / FILENAME
+<span class="n">OUT_PATH</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">/</span> <span class="n">FILENAME</span>
 
-FIG_PATH = FIG_PATH / FILENAME
-
-
-def glue(name, var, **kwargs):
-    default_glue(name, var, FILENAME, **kwargs)
+<span class="n">FIG_PATH</span> <span class="o">=</span> <span class="n">FIG_PATH</span> <span class="o">/</span> <span class="n">FILENAME</span>
 
 
-def gluefig(name, fig, **kwargs):
-    savefig(name, foldername=FILENAME, **kwargs)
-
-    glue(name, fig, figure=True)
-
-    if not DISPLAY_FIGS:
-        plt.close()
+<span class="k">def</span> <span class="nf">glue</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">default_glue</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">FILENAME</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-graspologic_path = &quot;/Users/bpedigo/JHU_code/neuro-matching/graspologic&quot;
-graspologic_repo = Repo(graspologic_path)
-print(&quot;Using new graph matching implementation under development, see PR:&quot;)
-print(&quot;https://github.com/microsoft/graspologic/pull/960&quot;)
-print(f&quot;Current graspologic branch: {graspologic_repo.active_branch.name}&quot;)
-print(f&quot;Current graspologic commit hash: {graspologic_repo.head.commit}&quot;)
+<span class="k">def</span> <span class="nf">gluefig</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">savefig</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">foldername</span><span class="o">=</span><span class="n">FILENAME</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-t0 = time.time()
-set_theme()
-rng = np.random.default_rng(888)
-np.random.seed(8888)
+    <span class="n">glue</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">DISPLAY_FIGS</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="n">graspologic_path</span> <span class="o">=</span> <span class="s2">&quot;/Users/bpedigo/JHU_code/neuro-matching/graspologic&quot;</span>
+<span class="n">graspologic_repo</span> <span class="o">=</span> <span class="n">Repo</span><span class="p">(</span><span class="n">graspologic_path</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using new graph matching implementation under development, see PR:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;https://github.com/microsoft/graspologic/pull/960&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current graspologic branch: </span><span class="si">{</span><span class="n">graspologic_repo</span><span class="o">.</span><span class="n">active_branch</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current graspologic commit hash: </span><span class="si">{</span><span class="n">graspologic_repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">commit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">set_theme</span><span class="p">()</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">888</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">8888</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -519,15 +518,15 @@ Current graspologic commit hash: 07a0ede2e6c26db0d7719c6087f4a99c0966422e
 <h2>Load the data<a class="headerlink" href="#load-the-data" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>meta_loc = DATA_PATH / &quot;spiny/meta_adj_spiny_big.csv&quot;
-meta = pd.read_csv(meta_loc, index_col=0)
-meta[&quot;bodyid&quot;] = meta[&quot;bodyid&quot;].astype(int)
-meta[&quot;group&quot;] = meta[&quot;group&quot;].astype(&quot;Int64&quot;)
-meta = meta.set_index(&quot;bodyid&quot;)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">meta_loc</span> <span class="o">=</span> <span class="n">DATA_PATH</span> <span class="o">/</span> <span class="s2">&quot;spiny/meta_adj_spiny_big.csv&quot;</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">meta_loc</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">meta</span><span class="p">[</span><span class="s2">&quot;bodyid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;bodyid&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;Int64&quot;</span><span class="p">)</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;bodyid&quot;</span><span class="p">)</span>
 
-adj_loc = DATA_PATH / &quot;spiny/adj_spiny_big.mtx&quot;
-adj_dense = mmread(adj_loc).toarray()
-adj_df = pd.DataFrame(data=adj_dense, index=meta.index, columns=meta.index)
+<span class="n">adj_loc</span> <span class="o">=</span> <span class="n">DATA_PATH</span> <span class="o">/</span> <span class="s2">&quot;spiny/adj_spiny_big.mtx&quot;</span>
+<span class="n">adj_dense</span> <span class="o">=</span> <span class="n">mmread</span><span class="p">(</span><span class="n">adj_loc</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="n">adj_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">adj_dense</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -537,132 +536,129 @@ adj_df = pd.DataFrame(data=adj_dense, index=meta.index, columns=meta.index)
 <h2>Selecting subsets of the data for some experiments<a class="headerlink" href="#selecting-subsets-of-the-data-for-some-experiments" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">select_paired_neuromere</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">neuromere</span><span class="p">):</span>
+    <span class="c1"># select the neuromere</span>
+    <span class="n">select_meta</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;soma_neuromere&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">neuromere</span><span class="p">])]</span>
 
-def select_paired_neuromere(meta, neuromere):
-    # select the neuromere
-    select_meta = meta[meta[&quot;soma_neuromere&quot;].isin([neuromere])]
+    <span class="c1"># count occurences of &quot;group&quot;</span>
+    <span class="n">group_counts</span> <span class="o">=</span> <span class="n">select_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
 
-    # count occurences of &quot;group&quot;
-    group_counts = select_meta[&quot;group&quot;].value_counts()
+    <span class="c1"># find everything that occurs only twice</span>
+    <span class="n">single_group_counts</span> <span class="o">=</span> <span class="n">group_counts</span><span class="p">[</span><span class="n">group_counts</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
 
-    # find everything that occurs only twice
-    single_group_counts = group_counts[group_counts == 2].index
+    <span class="c1"># subselect to these which are paired</span>
+    <span class="n">select_meta</span> <span class="o">=</span> <span class="n">select_meta</span><span class="p">[</span><span class="n">select_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">single_group_counts</span><span class="p">)]</span>
+    <span class="n">select_meta</span> <span class="o">=</span> <span class="n">select_meta</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;group&quot;</span><span class="p">)</span>
 
-    # subselect to these which are paired
-    select_meta = select_meta[select_meta[&quot;group&quot;].isin(single_group_counts)]
-    select_meta = select_meta.sort_values(&quot;group&quot;)
+    <span class="c1"># split left right</span>
+    <span class="n">left_meta</span> <span class="o">=</span> <span class="n">select_meta</span><span class="p">[</span><span class="n">select_meta</span><span class="p">[</span><span class="s2">&quot;soma_side&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;LHS&quot;</span><span class="p">]</span>
+    <span class="n">right_meta</span> <span class="o">=</span> <span class="n">select_meta</span><span class="p">[</span><span class="n">select_meta</span><span class="p">[</span><span class="s2">&quot;soma_side&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;RHS&quot;</span><span class="p">]</span>
 
-    # split left right
-    left_meta = select_meta[select_meta[&quot;soma_side&quot;] == &quot;LHS&quot;]
-    right_meta = select_meta[select_meta[&quot;soma_side&quot;] == &quot;RHS&quot;]
+    <span class="c1"># grab subset for which we have on both left and right</span>
+    <span class="c1"># because of filter above, these are the cases where we have one on right and left</span>
+    <span class="n">groups_in_both</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="n">left_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">],</span> <span class="n">right_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">])</span>
+    <span class="n">left_meta</span> <span class="o">=</span> <span class="n">left_meta</span><span class="p">[</span><span class="n">left_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">groups_in_both</span><span class="p">)]</span>
+    <span class="n">right_meta</span> <span class="o">=</span> <span class="n">right_meta</span><span class="p">[</span><span class="n">right_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">groups_in_both</span><span class="p">)]</span>
 
-    # grab subset for which we have on both left and right
-    # because of filter above, these are the cases where we have one on right and left
-    groups_in_both = np.intersect1d(left_meta[&quot;group&quot;], right_meta[&quot;group&quot;])
-    left_meta = left_meta[left_meta[&quot;group&quot;].isin(groups_in_both)]
-    right_meta = right_meta[right_meta[&quot;group&quot;].isin(groups_in_both)]
+    <span class="c1"># ensure indexed the same, useful assumption later</span>
+    <span class="k">assert</span> <span class="n">left_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="n">right_meta</span><span class="p">[</span><span class="s2">&quot;group&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
-    # ensure indexed the same, useful assumption later
-    assert left_meta[&quot;group&quot;].values == right_meta[&quot;group&quot;].values
-
-    return left_meta, right_meta
+    <span class="k">return</span> <span class="n">left_meta</span><span class="p">,</span> <span class="n">right_meta</span>
 
 
-def select_adjacency(source, target=None, sparse=False):
-    if target is None:
-        target = source
-    sub_adjacency = adj_df.loc[source, target].values
-    if sparse:
-        sub_adjacency = csr_array(sub_adjacency)
-    return sub_adjacency
+<span class="k">def</span> <span class="nf">select_adjacency</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">source</span>
+    <span class="n">sub_adjacency</span> <span class="o">=</span> <span class="n">adj_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="n">sparse</span><span class="p">:</span>
+        <span class="n">sub_adjacency</span> <span class="o">=</span> <span class="n">csr_array</span><span class="p">(</span><span class="n">sub_adjacency</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sub_adjacency</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-RERUN = True
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">RERUN</span> <span class="o">=</span> <span class="kc">True</span>
 
-n_seeds = 0
-neuromeres = [&quot;T1&quot;]  # &quot;T2&quot;, &quot;T3&quot;]
-sparse = True
-transport = False
-bilateral = True
-n_repeats = 1
+<span class="n">n_seeds</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">neuromeres</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;T1&quot;</span><span class="p">]</span>  <span class="c1"># &quot;T2&quot;, &quot;T3&quot;]</span>
+<span class="n">sparse</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">transport</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">bilateral</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">n_repeats</span> <span class="o">=</span> <span class="mi">1</span>
 
-if RERUN:
-    matches = []
-    rows = []
-    with tqdm(total=len(neuromeres) * n_repeats) as pbar:
-        for neuromere in neuromeres:
-            left_meta, right_meta = select_paired_neuromere(meta, neuromere)
-            left_nodes = left_meta.index
-            right_nodes = right_meta.index
+<span class="k">if</span> <span class="n">RERUN</span><span class="p">:</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">neuromeres</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_repeats</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">neuromere</span> <span class="ow">in</span> <span class="n">neuromeres</span><span class="p">:</span>
+            <span class="n">left_meta</span><span class="p">,</span> <span class="n">right_meta</span> <span class="o">=</span> <span class="n">select_paired_neuromere</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">neuromere</span><span class="p">)</span>
+            <span class="n">left_nodes</span> <span class="o">=</span> <span class="n">left_meta</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">right_nodes</span> <span class="o">=</span> <span class="n">right_meta</span><span class="o">.</span><span class="n">index</span>
 
-            ll_adj = select_adjacency(left_nodes, left_nodes, sparse=sparse)
-            rr_adj = select_adjacency(right_nodes, right_nodes, sparse=sparse)
-            lr_adj = select_adjacency(left_nodes, right_nodes, sparse=sparse)
-            rl_adj = select_adjacency(right_nodes, left_nodes, sparse=sparse)
-            n = ll_adj.shape[0]
+            <span class="n">ll_adj</span> <span class="o">=</span> <span class="n">select_adjacency</span><span class="p">(</span><span class="n">left_nodes</span><span class="p">,</span> <span class="n">left_nodes</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">)</span>
+            <span class="n">rr_adj</span> <span class="o">=</span> <span class="n">select_adjacency</span><span class="p">(</span><span class="n">right_nodes</span><span class="p">,</span> <span class="n">right_nodes</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">)</span>
+            <span class="n">lr_adj</span> <span class="o">=</span> <span class="n">select_adjacency</span><span class="p">(</span><span class="n">left_nodes</span><span class="p">,</span> <span class="n">right_nodes</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">)</span>
+            <span class="n">rl_adj</span> <span class="o">=</span> <span class="n">select_adjacency</span><span class="p">(</span><span class="n">right_nodes</span><span class="p">,</span> <span class="n">left_nodes</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">ll_adj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-            print(f&quot;Neuromere {neuromere} has {n} neurons per side.&quot;)
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Neuromere </span><span class="si">{</span><span class="n">neuromere</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> neurons per side.&quot;</span><span class="p">)</span>
 
-            perm = rng.permutation(n)
-            undo_perm = np.argsort(perm)
-            rr_adj = rr_adj[perm][:, perm]
-            lr_adj = lr_adj[:, perm]
-            rl_adj = rl_adj[perm]
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">undo_perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
+            <span class="n">rr_adj</span> <span class="o">=</span> <span class="n">rr_adj</span><span class="p">[</span><span class="n">perm</span><span class="p">][:,</span> <span class="n">perm</span><span class="p">]</span>
+            <span class="n">lr_adj</span> <span class="o">=</span> <span class="n">lr_adj</span><span class="p">[:,</span> <span class="n">perm</span><span class="p">]</span>
+            <span class="n">rl_adj</span> <span class="o">=</span> <span class="n">rl_adj</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span>
 
-            for trial in range(n_repeats):
-                pbar.update(1)
+            <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_repeats</span><span class="p">):</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-                if bilateral:
-                    AB = lr_adj
-                    BA = rl_adj
-                else:
-                    AB = None
-                    BA = None
+                <span class="k">if</span> <span class="n">bilateral</span><span class="p">:</span>
+                    <span class="n">AB</span> <span class="o">=</span> <span class="n">lr_adj</span>
+                    <span class="n">BA</span> <span class="o">=</span> <span class="n">rl_adj</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">AB</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">BA</span> <span class="o">=</span> <span class="kc">None</span>
 
-                currtime = time.time()
+                <span class="n">currtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-                indices_l, indices_r, score, misc = graph_match(
-                    A=ll_adj,
-                    B=rr_adj,
-                    AB=AB,
-                    BA=BA,
-                    transport=transport,
-                    transport_regularizer=700,
-                    rng=rng.integers(np.iinfo(np.uint32).max),
-                    max_iter=60,
-                )
-                match_ratio_full = (indices_r == undo_perm).mean()
-                elapsed = time.time() - currtime
+                <span class="n">indices_l</span><span class="p">,</span> <span class="n">indices_r</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">misc</span> <span class="o">=</span> <span class="n">graph_match</span><span class="p">(</span>
+                    <span class="n">A</span><span class="o">=</span><span class="n">ll_adj</span><span class="p">,</span>
+                    <span class="n">B</span><span class="o">=</span><span class="n">rr_adj</span><span class="p">,</span>
+                    <span class="n">AB</span><span class="o">=</span><span class="n">AB</span><span class="p">,</span>
+                    <span class="n">BA</span><span class="o">=</span><span class="n">BA</span><span class="p">,</span>
+                    <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">,</span>
+                    <span class="n">transport_regularizer</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span>
+                    <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">),</span>
+                    <span class="n">max_iter</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">match_ratio_full</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices_r</span> <span class="o">==</span> <span class="n">undo_perm</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">currtime</span>
 
-                result = {
-                    &quot;match_ratio_full&quot;: match_ratio_full,
-                    &quot;n_seeds&quot;: n_seeds,
-                    &quot;elapsed&quot;: elapsed,
-                    &quot;bilateral&quot;: bilateral,
-                    &quot;transport&quot;: transport,
-                    &quot;n_iter&quot;: misc[0][&quot;n_iter&quot;],
-                    &quot;converged&quot;: misc[0][&quot;converged&quot;],
-                    &quot;n&quot;: n,
-                    &quot;neuromere&quot;: neuromere,
-                    &quot;score&quot;: score,
-                }
-                rows.append(result)
-                perm = np.empty(n, dtype=int)
-                perm[undo_perm] = indices_r
-                matches.append(perm)
+                <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;match_ratio_full&quot;</span><span class="p">:</span> <span class="n">match_ratio_full</span><span class="p">,</span>
+                    <span class="s2">&quot;n_seeds&quot;</span><span class="p">:</span> <span class="n">n_seeds</span><span class="p">,</span>
+                    <span class="s2">&quot;elapsed&quot;</span><span class="p">:</span> <span class="n">elapsed</span><span class="p">,</span>
+                    <span class="s2">&quot;bilateral&quot;</span><span class="p">:</span> <span class="n">bilateral</span><span class="p">,</span>
+                    <span class="s2">&quot;transport&quot;</span><span class="p">:</span> <span class="n">transport</span><span class="p">,</span>
+                    <span class="s2">&quot;n_iter&quot;</span><span class="p">:</span> <span class="n">misc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;n_iter&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;converged&quot;</span><span class="p">:</span> <span class="n">misc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;converged&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span>
+                    <span class="s2">&quot;neuromere&quot;</span><span class="p">:</span> <span class="n">neuromere</span><span class="p">,</span>
+                    <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="n">score</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">perm</span><span class="p">[</span><span class="n">undo_perm</span><span class="p">]</span> <span class="o">=</span> <span class="n">indices_r</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
 
-    results = pd.DataFrame(rows)
-    results.to_csv(OUT_PATH / &quot;simple_matching_summary.csv&quot;)
-else:
-    results = pd.read_csv(OUT_PATH / &quot;simple_matching_summary.csv&quot;, index_col=0)
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">OUT_PATH</span> <span class="o">/</span> <span class="s2">&quot;simple_matching_summary.csv&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">OUT_PATH</span> <span class="o">/</span> <span class="s2">&quot;simple_matching_summary.csv&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-results
+<span class="n">results</span>
 </pre></div>
 </div>
 </div>
@@ -722,17 +718,17 @@ results
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>id_matches = []
-for match in matches:
-    id_matches.append(right_nodes[match])
-match_df = pd.DataFrame(id_matches).T
-match_df.set_index(left_nodes)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">id_matches</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+    <span class="n">id_matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">right_nodes</span><span class="p">[</span><span class="n">match</span><span class="p">])</span>
+<span class="n">match_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">id_matches</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">match_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">left_nodes</span><span class="p">)</span>
 
-# avg_n_unique = 0
-# for idx, row in match_df.iterrows():
-#     n_unique = row.nunique()
-#     avg_n_unique += n_unique / len(match_df)
-# avg_n_unique
+<span class="c1"># avg_n_unique = 0</span>
+<span class="c1"># for idx, row in match_df.iterrows():</span>
+<span class="c1">#     n_unique = row.nunique()</span>
+<span class="c1">#     avg_n_unique += n_unique / len(match_df)</span>
+<span class="c1"># avg_n_unique</span>
 </pre></div>
 </div>
 </div>
@@ -817,22 +813,21 @@ match_df.set_index(left_nodes)
 <h2>Group confusion matrices for the full dataset<a class="headerlink" href="#group-confusion-matrices-for-the-full-dataset" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-right_matched_meta = right_meta.iloc[match].copy().reset_index()
-left_matched_meta = left_meta.copy().reset_index()
-matched_meta = left_matched_meta.join(
-    right_matched_meta, lsuffix=&quot;_left&quot;, rsuffix=&quot;_right&quot;
-)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">right_matched_meta</span> <span class="o">=</span> <span class="n">right_meta</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">match</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">left_matched_meta</span> <span class="o">=</span> <span class="n">left_meta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">matched_meta</span> <span class="o">=</span> <span class="n">left_matched_meta</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="n">right_matched_meta</span><span class="p">,</span> <span class="n">lsuffix</span><span class="o">=</span><span class="s2">&quot;_left&quot;</span><span class="p">,</span> <span class="n">rsuffix</span><span class="o">=</span><span class="s2">&quot;_right&quot;</span>
+<span class="p">)</span>
 
-fields = [&quot;predicted_nt&quot;, &quot;class&quot;, &quot;hemilineage&quot;]
-for field in fields:
-    confusionplot(
-        matched_meta[field + &quot;_left&quot;].fillna(&quot;unknown&quot;).values,
-        matched_meta[field + &quot;_right&quot;].fillna(&quot;unknown&quot;).values,
-        xticklabels=1,
-        yticklabels=1,
-        figsize=(12, 12),
-    )
+<span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;predicted_nt&quot;</span><span class="p">,</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;hemilineage&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+    <span class="n">confusionplot</span><span class="p">(</span>
+        <span class="n">matched_meta</span><span class="p">[</span><span class="n">field</span> <span class="o">+</span> <span class="s2">&quot;_left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">matched_meta</span><span class="p">[</span><span class="n">field</span> <span class="o">+</span> <span class="s2">&quot;_right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">xticklabels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">yticklabels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -847,15 +842,15 @@ for field in fields:
 <h2>Confusion matrices for the incorrect matches only<a class="headerlink" href="#confusion-matrices-for-the-incorrect-matches-only" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>incorrect_meta = matched_meta[matched_meta[&quot;group_left&quot;] != matched_meta[&quot;group_right&quot;]]
-for field in fields:
-    confusionplot(
-        incorrect_meta[field + &quot;_left&quot;].fillna(&quot;unknown&quot;).values,
-        incorrect_meta[field + &quot;_right&quot;].fillna(&quot;unknown&quot;).values,
-        xticklabels=1,
-        yticklabels=1,
-        figsize=(12, 12),
-    )
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">incorrect_meta</span> <span class="o">=</span> <span class="n">matched_meta</span><span class="p">[</span><span class="n">matched_meta</span><span class="p">[</span><span class="s2">&quot;group_left&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matched_meta</span><span class="p">[</span><span class="s2">&quot;group_right&quot;</span><span class="p">]]</span>
+<span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+    <span class="n">confusionplot</span><span class="p">(</span>
+        <span class="n">incorrect_meta</span><span class="p">[</span><span class="n">field</span> <span class="o">+</span> <span class="s2">&quot;_left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">incorrect_meta</span><span class="p">[</span><span class="n">field</span> <span class="o">+</span> <span class="s2">&quot;_right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">xticklabels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">yticklabels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -870,15 +865,15 @@ for field in fields:
 <h2>Confusion matrices for the correct matches only<a class="headerlink" href="#confusion-matrices-for-the-correct-matches-only" title="Permalink to this headline">#</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>correct_meta = matched_meta[matched_meta[&quot;group_left&quot;] == matched_meta[&quot;group_right&quot;]]
-for field in fields:
-    confusionplot(
-        correct_meta[field + &quot;_left&quot;].fillna(&quot;unknown&quot;).values,
-        correct_meta[field + &quot;_right&quot;].fillna(&quot;unknown&quot;).values,
-        xticklabels=1,
-        yticklabels=1,
-        figsize=(12, 12),
-    )
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">correct_meta</span> <span class="o">=</span> <span class="n">matched_meta</span><span class="p">[</span><span class="n">matched_meta</span><span class="p">[</span><span class="s2">&quot;group_left&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">matched_meta</span><span class="p">[</span><span class="s2">&quot;group_right&quot;</span><span class="p">]]</span>
+<span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+    <span class="n">confusionplot</span><span class="p">(</span>
+        <span class="n">correct_meta</span><span class="p">[</span><span class="n">field</span> <span class="o">+</span> <span class="s2">&quot;_left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">correct_meta</span><span class="p">[</span><span class="n">field</span> <span class="o">+</span> <span class="s2">&quot;_right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">xticklabels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">yticklabels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -909,7 +904,7 @@ for field in fields:
             mode: "python"
         },
         kernelOptions: {
-            kernelName: "python3",
+            name: "python3",
             path: "./."
         },
         predefinedOutput: true
